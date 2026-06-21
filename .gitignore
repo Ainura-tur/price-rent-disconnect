@@ -1,0 +1,42 @@
+# --- targets cache -----------------------------------------------------------
+_targets/
+
+# --- regenerated artefacts (rebuilt by the pipeline; do not commit) ----------
+clean/
+output/
+logs/
+
+# --- R session cruft ---------------------------------------------------------
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# --- OS / editor -------------------------------------------------------------
+.DS_Store
+Thumbs.db
+*~
+.vscode/
+
+# --- LaTeX build products (keep .tex and the final .pdf; ignore the rest) -----
+manuscript/*.aux
+manuscript/*.log
+manuscript/*.out
+manuscript/*.toc
+manuscript/*.bbl
+manuscript/*.blg
+manuscript/*.synctex.gz
+manuscript/*.fls
+manuscript/*.fdb_latexmk
+
+# --- raw data ----------------------------------------------------------------
+# All three sources permit reproduction WITH attribution (see raw/README.md),
+# so the THIRTEEN pipeline inputs are committed. The files below may sit in a
+# working raw/ folder but are NOT pipeline inputs (superseded or stray exports);
+# they are excluded so they are never committed by accident. See the
+# "Files deliberately NOT committed" section of raw/README.md.
+raw/ABS_OMAD_VISA,+*AUS.Q.csv
+raw/f01dhist.xls
+raw/560114.xlsx
+
+# If you add a source whose terms forbid redistribution, ignore that file here too.
