@@ -84,7 +84,7 @@
 \begin{frontmatter}
 
 \title{Credit, Fundamentals, and the Price--Rent Disconnect in
-Australian Housing Markets:\\
+Australian Housing Markets:
 Evidence from Five Capital Cities, 2006--2025}
 %\author[1]{Ainura Tursunalieva\footnote{ORCID: 0000-0003-2784-9031}}
 %\ead{ainura.tursunalieva@data61.csiro.au}
@@ -119,19 +119,14 @@ time. Prices differ. Investor mortgage demand co-moves much more strongly
 with prices than with rents, and this asymmetry sharpens after 2017.
 
 Because credit and prices are jointly determined within the quarter, we
-bound rather than point-estimate their relationship. The contemporaneous
+bracket rather than pin down a single elasticity for their relationship. The contemporaneous
 association is large and remains economically meaningful even when credit
-is treated as predetermined. Panel local projections identify the
-transmission dynamics: credit shocks are capitalised into prices
-immediately but reach rents only with a delay. In the preferred
+is treated as predetermined. Panel local projections trace the transmission dynamics: investor-credit innovations are capitalised into prices immediately but reach rents only with a delay. In the preferred
 specification, rents respond little during the first year, then rise
 gradually, with prices and rents converging over a three-year horizon.
 
 The decoupling thus reflects differences in transmission speed rather
-than permanent insulation of rents from financial conditions. The
-strengthening of the price--investor-credit channel is broad-based in
-the pooled panel rather than concentrated in the most heavily invested
-city. We interpret the breakdown in the price--rent
+than permanent insulation of rents from financial conditions. The strengthening of the price--investor-credit channel is broad-based in the pooled panel and is not concentrated in Sydney. We interpret the breakdown in the price--rent
 relationship as evidence that the two markets are increasingly governed
 by different forces: rents by local fundamentals, prices by investor
 finance. Our contribution is to document this separation rather than to
@@ -236,7 +231,7 @@ equations. A rent equation relates rent growth to a market-tightness
 fundamental (net migration relative to dwelling completions), wage
 growth, and employment. A price equation relates price growth to the
 cost of capital (the cash rate) and investor mortgage demand, alongside
-the same fundamentals. We then test whether the financial driver in
+the same market tightness. We then test whether the financial driver in
 each equation changed after 2017 by interacting investor credit with a
 post-2017 indicator, and we trace the timing with panel local
 projections of prices and rents on an investor-credit innovation. The design is descriptive: each equation is a standard
@@ -378,7 +373,7 @@ reaches each outcome. This reframes the decoupling as the mechanical
 consequence of the two outcomes loading on different drivers, which the
 within-city panel can test.
 
-\label{sec:comparative_lit}
+%\label{sec:comparative_lit}
 Two features distinguish our design from this prior work. First, the
 within-market question, whether the determinants of rents and prices
 diverge over time, has not been posed: \citet{moallemi2020impact} compare
@@ -399,7 +394,7 @@ for prices, and we trace the dynamic mechanism, fast capitalisation into
 prices and slow transmission to rents, that produces the breakdown of the
 price--rent relationship.
 
-\section{Methods}
+\section{Data and Methods}
 \label{sec:materials_methods}
 
 \subsection{Conceptual Framework}
@@ -577,55 +572,6 @@ investor demand with the post-2017 period, allowing the data to reveal
 which channels are active and whether the price--credit relationship
 strengthens after the break.
 
-\subsection{Empirical Specification}
-
-Building on the theoretical framework, the reduced-form rental price
-relationship (Equation~\ref{eq:reduced_regional}) collects a city
-intercept, a post-2017 break indicator, and a vector of lagged
-explanatory variables; we estimate its parsimonious first-difference
-specialisation (Section~\ref{sec:methods}) rather than a level equation.
-The break indicator is
-$\text{POST}_{t}=\mathds{1}[t\geq 2017\mathrm{:}Q1]$ for all cities. It
-is a structural-break indicator, not a treatment whose causal effect we
-estimate: it marks a candidate break in the sample around which we test
-whether the determinants of prices and rents change. For non-Sydney
-cities it captures the post-2017 institutional environment broadly, while
-in Sydney it coincides with the public housing reform. We denote a
-Sydney-only NSW-reform indicator as
-$D_{jt}^{NSW}=\mathds{1}[j=\text{Sydney}]\cdot \text{POST}_{t}$.
-
-The full vector of explanatory variables derived from the theoretical model
-is
-$\mathbf{X}_{jt} = [C_{j,t-1},\; r_{t-1},\; GFCF^{P}_{j,t-1},\;
-GFCF^{G}_{j,t-1},\; P_{j,t-1},\; M_{j,t-1},\; w_{j,t-1},\;
-N_{j,t-1},\; HHS_{jt}]$. In this specification, $C_{j,t-1}$ refers to
-construction costs; $r_{t-1}$ to the lagged cash rate (national);
-$P_{j,t-1}$ is the property price index; $M_{j,t-1}$ captures net
-migration flows; $w_{j,t-1}$ and $N_{j,t-1}$ denote average wages and
-employment; and we proxy  owner-occupier demand, $NH_{jt}$, using household housing services consumption $(HHS_{jt})$.
-
-To model the crowding-out effect, the concurrent competition between
-public and private investment for construction capacity, the theoretical
-specification includes public and private Gross Fixed Capital Formation
-($GFCF^{G}_{j,t-1}$ and $GFCF^{P}_{j,t-1}$) separately rather than using
-the crowding-out ratio $CO_{j,t-1}$ directly, which would in principle
-allow the data to determine whether the crowding-out mechanism operates
-differently across cities with varying geographic constraints. In
-estimation we retain the parsimonious specifications below, which drop
-the GFCF terms; we return to this reduction where the rent equation is
-introduced (Section~\ref{sec:methods}).
-
-We estimate the two reduced-form equations as within-city
-first-difference models over 2006:Q3--2025:Q4, with the stationary
-tightness measure in levels (lagged) and the $I(1)$ series in
-differences. A mean-group estimator allows fully heterogeneous
-city-level coefficients in the rent equation, confirming that the
-fundamentals relationship holds market by market. Identification rests
-on the within-city time dimension rather than the five-unit
-cross-section.
-
-
-
 \subsection{Data Sources and Description}
 \label{sec:data}
 
@@ -635,7 +581,10 @@ cities (Sydney, Melbourne, Brisbane, Adelaide, and Perth) covering
 employment, and investor credit, extend to 2025:Q4; net migration, and
 hence the constructed market-tightness measure, is published with a lag
 and ends one quarter earlier, in 2025:Q3, which binds the usable endpoint
-for any tightness-dependent specification. The within-city time dimension
+for any tightness-dependent specification. Because tightness enters lagged
+one quarter, the 2025:Q3 tightness value serves as the predictor for the
+2025:Q4 outcome, so 2025:Q4 remains the last estimation quarter despite the
+migration series ending in 2025:Q3. The within-city time dimension
 carries the identification: up to seventy-eight quarters of data per
 market, of which the estimation uses seventy-four city-quarters
 (370 city-quarters in total) once differencing and the trailing-window
@@ -667,11 +616,17 @@ investor mortgage demand by the value of new investor housing loan
 commitments by state (ABS Lending Indicators, the dataflow successor to
 Catalogue 5601.0 Table 14), with national investor and owner-occupier
 housing credit and the net loan-purpose switching flow from the Reserve
-Bank's D2 series used in the appendix robustness checks; migration by net
-overseas and interstate flows (ABS 3101.0), with net overseas migration
-disaggregated by visa-and-citizenship group (ABS Overseas Migration)
-employed in the appendix mechanism check; and monetary policy by the cash
-rate (RBA). State-level
+Bank's D2 series used in the appendix robustness checks. Throughout the
+paper, the terms ``investor credit'', ``investor mortgage demand'', and
+``investor housing loan commitments'' refer to this commitments-flow
+series, which is the variable labelled $\Delta\ln$ Investor credit in the
+estimation tables; the only exception is the appendix robustness checks,
+where we state explicitly that the measure is the RBA D2 stock of credit
+outstanding (or the investor share derived from it). Migration is
+measured by net overseas and interstate flows (ABS 3101.0), with net
+overseas migration disaggregated by visa-and-citizenship group (ABS
+Overseas Migration) employed in the appendix mechanism check. Monetary
+policy is measured by the cash rate (RBA). State-level
 variables serve as city proxies, appropriate given that each capital city
 accounts for 65--79\% of its state's economic activity.
 
@@ -748,7 +703,9 @@ snapshots from the rolling series (not period averages): specifically,
 the rolling correlation at the last quarter before 2017:Q1 and at
 2025:Q4 respectively.
 $^{b}$Large = post-2017 rolling correlation decline $> 0.30$;
-Small = between 0 and $0.30$; None = no decline. Reported descriptively,
+Small = decline between 0 and $0.30$; None = no material decline
+(a change at or near zero, whether a slight decline or a slight increase).
+Reported descriptively,
 not as a financialization-intensity index. $^{c}$Following
 \citet{saiz2010geographic}: Severe =
 multiple natural barriers; Moderate = partial; Low = unconstrained.
@@ -759,9 +716,10 @@ multiple natural barriers; Moderate = partial; Low = unconstrained.
 Three patterns in Table~\ref{tab:cross_city_summary} describe the
 variation in the panel. First, the post-2017 decline in the
 property--rental correlation is largest in Sydney and Melbourne and
-small or absent in the other capitals; we report this as a descriptive
-contrast, not as an identified gradient
-(Table~\ref{tab:cross_city_summary}).
+small, negligible, or reversed in direction in the other capitals,
+with Brisbane showing a slight decline ($-0.01$) and Adelaide and Perth
+slight increases ($+0.02$ each); we report this as a descriptive
+contrast, not as an identified gradient.
 Second, migration pressures are unevenly distributed: Sydney and
 Melbourne receive large overseas inflows but experience net interstate
 outflows, consistent with affordability-driven displacement
@@ -816,7 +774,14 @@ price--rent gap is the log of the dwelling-price index over the rent
 index, entered as a lagged level control. $N$ is the number of
 city-quarters available for each variable after differencing and lagging;
 tightness loses further observations to its trailing four-quarter
-construction and one-quarter lag.
+construction and one-quarter lag. The three counts that appear in the
+panel map directly to their binding constraint: the price--rent gap
+($N=390$) is a level series losing only its single lag; the differenced
+series ($N=385$) lose one further observation per city to first
+differencing; and tightness ($N=370$) loses the warm-up quarters of its
+trailing-window construction and lag. The estimating sample is the
+common intersection, 370 city-quarters, since every reported
+specification includes the lagged tightness term.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
@@ -889,148 +854,219 @@ the pre-GFC period. Third, construction cost data at the city level are proxied
 using state-level implicit price deflators from the national accounts,
 which may not fully capture city-specific cost pressures.
 
+\subsection{Empirical Specification}
+
+Building on the theoretical framework, the reduced-form rental price
+relationship (Equation~\ref{eq:reduced_regional}) collects a city
+intercept, a post-2017 break indicator, and a vector of lagged
+explanatory variables; we estimate its parsimonious first-difference
+specialisation (Section~\ref{sec:methods}) rather than a level equation.
+The break indicator is
+$\text{POST}_{t}=\mathds{1}[t\geq 2017\mathrm{:}Q1]$ for all cities. It
+is a structural-break indicator, not a treatment whose causal effect we
+estimate: it marks a candidate break in the sample around which we test
+whether the determinants of prices and rents change. For non-Sydney
+cities it captures the post-2017 institutional environment broadly, while
+in Sydney it coincides with the public housing reform. We denote a
+Sydney-only NSW-reform indicator as
+$D_{jt}^{NSW}=\mathds{1}[j=\text{Sydney}]\cdot \text{POST}_{t}$.
+
+The full vector of explanatory variables derived from the theoretical model
+is
+$\mathbf{X}_{jt} = [C_{j,t-1},\; r_{t-1},\; GFCF^{P}_{j,t-1},\;
+GFCF^{G}_{j,t-1},\; P_{j,t-1},\; M_{j,t-1},\; w_{j,t-1},\;
+N_{j,t-1},\; HHS_{jt}]$. In this specification, $C_{j,t-1}$ refers to
+construction costs; $r_{t-1}$ to the lagged cash rate (national);
+$P_{j,t-1}$ is the property price index; $M_{j,t-1}$ captures net
+migration flows; $w_{j,t-1}$ and $N_{j,t-1}$ denote average wages and
+employment; and we proxy  owner-occupier demand, $NH_{jt}$, using household housing services consumption $(HHS_{jt})$.
+
+To model the crowding-out effect, the concurrent competition between
+public and private investment for construction capacity, the theoretical
+specification includes public and private Gross Fixed Capital Formation
+($GFCF^{G}_{j,t-1}$ and $GFCF^{P}_{j,t-1}$) separately rather than using
+the crowding-out ratio $CO_{j,t-1}$ directly, which would in principle
+allow the data to determine whether the crowding-out mechanism operates
+differently across cities with varying geographic constraints. In
+estimation we retain the parsimonious specifications below, which drop
+the GFCF terms; we return to this reduction where the rent equation is
+introduced (Section~\ref{sec:methods}).
+
+We estimate the two reduced-form equations as within-city
+first-difference models over 2006:Q3--2025:Q4, with the stationary
+tightness measure in levels (lagged) and the $I(1)$ series in
+differences. A mean-group estimator allows fully heterogeneous
+city-level coefficients in the rent equation, confirming that the
+fundamentals relationship holds market by market. Identification rests
+on the within-city time dimension rather than the five-unit
+cross-section.
+
 \subsection{Econometric Methods}
 \label{sec:methods}
 
-We estimate two reduced-form equations on the five-city quarterly
-panel, placing identification on the within-city time dimension. Most
-series are trending index levels of borderline or first-order
-integration, so we work in first differences; the
-market-tightness measure is a ratio of flows and is stationary, so it
-enters in levels lagged one quarter. All models include city fixed
-effects and use heteroskedasticity- and autocorrelation-robust
-(Driscoll--Kraay) standard errors.
+We estimate two reduced-form equations on the five-city quarterly panel,
+using within-city time variation as the source of empirical variation.
+Most series are trending index levels of borderline or first-order
+integration, so we work in first differences. The market-tightness
+measure is a ratio of flows and is stationary, so it enters in levels
+lagged one quarter. All models include city fixed effects and use
+heteroskedasticity- and autocorrelation-robust Driscoll--Kraay standard
+errors.
 
-Each method below has a specific and limited role, and the set is small
-by design. The two reduced-form equations, estimated by within-city
-fixed effects, establish what governs rents and what governs prices. The
-mean-group estimator checks that the rent relationship holds city by city
-rather than only on average. The divergence test, a single interaction of
+The empirical strategy is deliberately compact. A rent equation relates
+rent growth to a market-tightness fundamental, defined as net migration
+relative to dwelling completions, together with wage growth and
+employment growth. A price equation relates price growth to the cost of
+capital, investor mortgage demand, and market tightness. We then test
+whether the financial driver in each equation changes after 2017 by
+interacting investor credit with a post-2017 break indicator, and we
+trace the timing of transmission with panel local projections. The
+rolling partial-\(R^2\) decomposition is reported as a descriptive
+robustness check rather than as part of the headline identification
+strategy.
+
+Each method below has a specific and limited role. The two reduced-form
+equations, estimated by within-city fixed effects, establish what
+covaries with rents and what covaries with prices. The mean-group
+estimator checks that the rent relationship holds city by city rather
+than only on average. The divergence test, a single interaction of
 investor credit with a post-2017 indicator in each equation, asks whether
 the price--credit relationship strengthens after the break while the
 rent--credit relationship does not. The local projections recover the
 timing that the static interaction compresses into one coefficient,
-showing how fast a credit innovation reaches prices versus rents. The
-shift-share instrument in the appendix is a supplementary check on the
-price--credit association, reported as indicative given the small
-cross-section, not as the headline. Everything else is robustness. We do
-not use the methods to layer additional claims; each addresses one link
-in a single argument, from what drives each outcome, to whether the
-credit link changes after 2017, to how quickly it transmits.
+showing how quickly an investor-credit innovation reaches prices versus
+rents. The shift-share instrument in the appendix is a supplementary
+check on the price--credit association, reported as indicative given the
+small cross-section, not as the headline design. Everything else is
+robustness. We do not use the methods to layer additional claims; each
+addresses one link in a single argument, from what drives each outcome,
+to whether the credit link changes after 2017, to how quickly it
+transmits.
 
 \paragraph{Stationarity and functional form}
+
 The unit-root evidence is mixed and borderline for several series
-(Table~\ref{tab:unit_root}): trend-augmented ADF tests reject a unit
-root in levels for the rent and property price indices, migration, the
-cash rate, and hourly wages, while public and private GFCF, housing
-services consumption, dwelling completions, labour income, and
-employment do not reject and are integrated of order one. Such mixed
-and marginal integration orders are typical of macro-regional panels,
-where short samples and trending nominal series leave level-based tests
-with low power. Rather than rest the design on a particular
-classification of each borderline series, we difference the index
-series (log rents, log prices, log wages, log employment, and log
-investor commitments), which is valid whether they are $I(1)$ or
-trend-stationary and is the treatment the cointegration literature on
-housing adopts for series of this kind \citep{kenny1999modelling}.
-Market
-tightness, net migration over the trailing four quarters relative to
-dwelling completions over the same window, is stationary (its
-autoregressive root is well below unity), and entering it in levels
-rather than differences is both the correct treatment of an $I(0)$
-regressor and materially better-fitting: differencing an already
-stationary variable over-differences it. The price--rent gap enters the
-rent equation in lagged log levels as a level control rather than as an
-error-correction term: a residual-based panel test does not find robust
-cointegration between log rents and log prices (group-mean ADF
-$\approx -1.86$, around the Pedroni five percent critical value), and the
-gap carries a coefficient close to zero and statistically insignificant
-in every rent specification we estimate, so we do not impose an
-error-correction interpretation on it.
+(Table~\ref{tab:unit_root}). Trend-augmented ADF tests reject a unit root
+in levels for the rent and property price indices, migration, the cash
+rate, and the wage index, while public and private GFCF, housing services
+consumption, dwelling completions, labour income, and employment do not
+reject and are integrated of order one. Such mixed and marginal
+integration orders are typical of macro-regional panels, where short
+samples and trending nominal series leave level-based tests with low
+power. Rather than rest the design on a particular classification of each
+borderline series, we difference the index variables: log rents, log
+prices, log wages, log employment, and log investor commitments. This is
+a conservative treatment for series that may be either $I(1)$ or
+trend-stationary, and is consistent with the treatment commonly adopted
+for housing-market panels of this kind \citep{kenny1999modelling}.
+
+Market tightness, defined as net migration over the trailing four
+quarters relative to dwelling completions over the same window, is
+stationary. Its autoregressive root is well below unity, so entering it
+in levels rather than differences is both the correct treatment of an
+$I(0)$ regressor and materially better-fitting: differencing an already
+stationary variable would over-difference it. The price--rent gap enters
+the rent equation in lagged log levels as a level control rather than as
+an error-correction term. A residual-based panel test does not find
+robust cointegration between log rents and log prices, with a group-mean
+ADF statistic of approximately $-1.86$, around the Pedroni five percent
+critical value. The gap also carries a coefficient close to zero and is
+statistically insignificant in every rent specification we estimate, so
+we do not impose an error-correction interpretation on it.
 
 The estimated rent equation is a parsimonious reduction of the
-theoretical reduced form in Equation~\ref{eq:reduced_regional}. We
-retain the terms the within-city first-difference design can identify
-and the data support, the tightness fundamental, wages, employment, and
-the lagged price--rent gap as a level control, and drop those that enter weakly or are
-absorbed by the transformation: construction costs and the cash rate
-carry no direct role on the rent side once prices are differenced, the
-public and private GFCF terms that proxy crowding-out are a supply-side
-channel that the parsimonious rent and price specifications do not
-retain, and owner-occupier demand is collinear with the tightness and
-price-gap terms. The structural model in Appendix~\ref{sec:model} sets out
-the fuller channel set, including crowding-out as competition for
-construction capacity; Equations~\ref{eq:rent} and~\ref{eq:price} estimate
-the subset that survives, and Figure~\ref{fig:transmission} shows the
-thesis those two equations test.
+theoretical reduced form in Equation~\ref{eq:reduced_regional}. We retain
+the terms that the within-city first-difference design can identify and
+that the data support: market tightness, wage growth, employment growth,
+and the lagged price--rent gap as a level control. We drop terms that
+enter weakly or are absorbed by the transformation. Construction costs
+and the cash rate carry no direct role on the rent side once prices are
+differenced. The public and private GFCF terms that proxy crowding-out
+are a supply-side channel that the parsimonious rent and price
+specifications do not retain. Owner-occupier demand is also collinear
+with the tightness and price-gap terms. The structural model in
+Appendix~\ref{sec:model} sets out the fuller channel set, including
+crowding-out as competition for construction capacity;
+Equations~\ref{eq:rent} and~\ref{eq:price} estimate the subset retained
+for the empirical tests, and Figure~\ref{fig:transmission} shows the
+transmission mechanism those two equations examine.
 
 \paragraph{Rent equation}
+
 \begin{equation}
 \label{eq:rent}
 \Delta r_{it} = \alpha_i + a\,(p-r)_{i,t-1}
  + b_1\,\text{TIGHT}_{i,t-1} + b_2\,\Delta w_{it}
  + b_3\,\Delta n_{it} + \varepsilon_{it},
 \end{equation}
-where $r$ is log rent, $(p-r)$ the log price--rent gap, $\text{TIGHT}$
-market tightness, $w$ log wages, and $n$ log employment. We estimate
-Equation~\ref{eq:rent} both as a pooled within (fixed-effects)
-estimator and as a mean-group estimator \citep{pesaran1995estimating}
-that averages city-specific regressions, the latter confirming that the
-fundamentals relationship holds market by market rather than only on
-average.
+where $r$ is log rent, $(p-r)$ is the log price--rent gap,
+$\text{TIGHT}$ is market tightness, $w$ is the log wage index, and $n$ is
+log employment. We estimate Equation~\ref{eq:rent} both as a pooled
+within fixed-effects estimator and as a mean-group estimator
+\citep{pesaran1995estimating} that averages city-specific regressions.
+The latter checks that the fundamentals relationship holds market by
+market rather than only on average.
 
 \paragraph{Price equation}
+
 \begin{equation}
 \label{eq:price}
 \Delta p_{it} = \gamma_i + c_1\,\Delta \text{CASH}_t
  + c_2\,\Delta \iota_{it} + c_3\,\text{TIGHT}_{i,t-1}
  + \eta_{it},
 \end{equation}
-where $p$ is log price, $\text{CASH}$ the cash rate, and $\iota$ log
-investor mortgage commitments.
+where $p$ is log property price, $\text{CASH}$ is the cash rate, and
+$\iota$ is log investor mortgage commitments.
 
 \paragraph{Divergence test}
-The central test interacts investor demand with a post-2017 indicator
-$\text{POST}_t$ in both equations:
+
+The central test interacts investor demand with the post-2017 break
+indicator in both equations:
 \begin{equation}
 \label{eq:divergence}
 \Delta y_{it} = \delta_i + \pi_1\,\Delta \iota_{it}
  + \pi_2\,(\Delta \iota_{it}\!\times\!\text{POST}_t)
  + \mathbf{x}_{it}'\boldsymbol{\psi} + \xi_{it},
 \end{equation}
-estimated separately with $y = p$ and $y = r$ and the appropriate
-controls $\mathbf{x}_{it}$ from Equations~\ref{eq:price}
-and~\ref{eq:rent}. The cash rate enters in differences but is not
-interacted: across the post-2017 window it is dominated by the COVID
-near-zero-rate period and the 2022--23 hiking cycle, making its
-interaction a regime artifact rather than a financialization signal; we
-report the cash-rate-interacted version as a robustness check. The
-parameter of interest is $\pi_2$. A large $\pi_2$ in the price equation
-with at most a small $\pi_2$ in the rent equation indicates that
-investor credit comoves more tightly with prices than with rents, and
-increasingly so after 2017. Because $\Delta\iota_{it}$ and
-$\Delta p_{it}$ are partly determined within the quarter, we estimate
-Equation~\ref{eq:divergence} both contemporaneously and with investor
-credit entered as predetermined (lagged one quarter); the two bracket
-the relationship, the contemporaneous estimate as an upper bound that
-absorbs simultaneity and the predetermined estimate as a lower bound
-that displaces a within-quarter relationship. The rent equation serves
-as a placebo for reverse causality. We test $\pi_2 = 0$ in each
-equation with a one-degree-of-freedom Wald test, and as a further check
-instrument $\Delta\iota_{it}$ with a shift-share instrument
-(Appendix~\ref{sec:robustness}), reading the first-stage strength as the
-binding diagnostic given the small cross-section.
+estimated separately with $y=p$ and $y=r$ and the appropriate controls
+$\mathbf{x}_{it}$ from Equations~\ref{eq:price} and~\ref{eq:rent}. The
+cash rate enters in differences but is not interacted in the baseline
+specification. Across the post-2017 window, the cash-rate series is
+dominated by the COVID-19 near-zero-rate period and the 2022--23 hiking
+cycle, making its interaction difficult to distinguish from broad
+monetary-policy regimes rather than the investor-credit channel. We
+therefore report the cash-rate-interacted version as a robustness check.
+
+The parameter of interest is $\pi_2$. A large $\pi_2$ in the price
+equation, together with a small or statistically insignificant $\pi_2$ in
+the rent equation, indicates that investor credit comoves more tightly
+with prices than with rents, and increasingly so after 2017. Because
+$\Delta\iota_{it}$ and $\Delta p_{it}$ are partly determined within the
+quarter, we estimate Equation~\ref{eq:divergence} both contemporaneously
+and with investor credit entered as predetermined, lagged one quarter.
+The two specifications bracket the relationship: the contemporaneous
+estimate is an upper-bound association that may absorb within-quarter
+simultaneity, while the predetermined estimate is a lower-bound
+association that excludes same-quarter feedback. The rent equation serves
+as a placebo-style comparison for reverse causality. We test
+$\pi_2=0$ in each equation with a one-degree-of-freedom Wald test and,
+as a further check, instrument $\Delta\iota_{it}$ with a shift-share
+instrument in Appendix~\ref{sec:robustness}. Given the small
+cross-section, we read the first-stage strength as the binding diagnostic
+for that supplementary exercise.
 
 \paragraph{Local projections}
+
 To recover the dynamics that the static interaction compresses into a
-single coefficient, we estimate Jord\`a panel local projections of the
+single coefficient, we estimate Jord\`{a} panel local projections of the
 price and rent levels on an investor-credit innovation over horizons
-$h = 0,\dots,12$, with city fixed effects and lagged controls that
-absorb the predictable component of credit. The impulse is scaled to
-one standard deviation of credit growth. Horizon zero retains the
-within-quarter simultaneity caveat; horizons from one quarter out are
-predetermined and clean of reverse causality. The object of interest is
-the difference in the shape and timing of the two response paths.
+$h=0,\dots,12$. The projections include city fixed effects and lagged
+controls that absorb the predictable component of credit. The impulse is
+scaled to one standard deviation of investor-credit growth. Horizon zero
+retains the within-quarter simultaneity caveat; horizons from one quarter
+out use predetermined credit innovations and are therefore less exposed
+to reverse causality. The object of interest is the difference in the
+shape and timing of the two response paths.
 
 \section{Results}
 \label{sec:results}
@@ -1136,9 +1172,12 @@ Observations           & 370 & 370 \\
 $R^2$                  &     & 0.570 \\
 \bottomrule
 \end{tabular}
-\begin{tablenotes}\footnotesize
+\begin{tablenotes}[flushleft]\footnotesize
 \item Dependent variable: $\Delta\ln$ rent. City fixed effects; Driscoll--Kraay
-standard errors in parentheses. \sym{*}$p<0.10$, \sym{**}$p<0.05$,
+standard errors in parentheses. The $R^2$ is reported for the mean-group
+column as the average of the city-specific regression fits; for the pooled
+within (FD) estimator the within-$R^2$ is not directly comparable across the
+two columns and is omitted. \sym{*}$p<0.10$, \sym{**}$p<0.05$,
 \sym{***}$p<0.01$.
 \end{tablenotes}
 \end{threeparttable}
@@ -1161,6 +1200,15 @@ coefficient as the better-behaved estimate of how the cost of capital feeds into
 prices. We therefore do not interpret the contemporaneous cash-rate coefficient and
 treat the lagged specification as the more credible of the two.
 
+Unlike the rent equation, we do not report a mean-group counterpart for the
+price equation. The mean-group estimator is used on the rent side to confirm
+that the fundamentals relationship holds city by city rather than only on
+average, a substantive claim of the paper. The price equation makes no such
+city-by-city stability claim: its identification rests on the within-city time
+variation that links investor credit to prices, and the central object, the
+post-2017 strengthening of that link, is estimated from the pooled time
+dimension rather than from cross-city heterogeneity in the static slope.
+
 \begin{table}[t]
 \centering
 \begin{threeparttable}
@@ -1168,26 +1216,28 @@ treat the lagged specification as the more credible of the two.
 \label{tab:price_eq}
 \begin{tabular}{lcc}
 \toprule
- & \multicolumn{1}{c}{Contemporaneous} & \multicolumn{1}{c}{Predetermined} \\
+ & \multicolumn{1}{c}{Current quarter} & \multicolumn{1}{c}{One-quarter lag} \\
+ & \multicolumn{1}{c}{$x_{t}$} & \multicolumn{1}{c}{$x_{t-1}$} \\
  & (1) & (2) \\
 \midrule
-$\Delta\ln$ Investor credit$_{t}$   & 0.072\sym{***} & \\
-                                     & (0.013) & \\
-$\Delta\ln$ Investor credit$_{t-1}$ &  & 0.050\sym{***} \\
-                                     &  & (0.013) \\
-$\Delta$ Cash rate$_{t}$            & 0.004 & \\
-                                     & (0.006) & \\
-$\Delta$ Cash rate$_{t-1}$          &  & $-0.006$ \\
-                                     &  & (0.004) \\
-Tightness$_{t-1}$                    & 0.003 & 0.004 \\
-                                     & (0.003) & (0.003) \\
+$\Delta\ln$ Investor credit   & 0.072\sym{***} & 0.050\sym{***} \\
+                              & (0.013) & (0.013) \\
+$\Delta$ Cash rate            & 0.004 & $-0.006$ \\
+                              & (0.006) & (0.004) \\
+Tightness$_{t-1}$             & 0.003 & 0.004 \\
+                              & (0.003) & (0.003) \\
 \midrule
-Observations                         & 370 & 370 \\
+Observations                  & 370 & 370 \\
+Within-$R^2$                  & 0.218 & 0.171 \\
 \bottomrule
 \end{tabular}
-\begin{tablenotes}\footnotesize
+\begin{tablenotes}[flushleft]\footnotesize
 \item Dependent variable: $\Delta\ln$ price. City fixed effects; Driscoll--Kraay
 standard errors in parentheses. Wage growth is excluded from the price equation.
+Each column reports the regressors entered at the timing given in the header:
+column~(1) enters investor credit and the cash rate in the current quarter
+($x_{t}$), column~(2) one quarter predetermined ($x_{t-1}$); market tightness is
+lagged one quarter throughout.
 \sym{*}$p<0.10$, \sym{**}$p<0.05$, \sym{***}$p<0.01$.
 \end{tablenotes}
 \end{threeparttable}
@@ -1207,7 +1257,7 @@ investor credit operating on prices in a way it does not operate on rents.
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.8\textwidth]{fig_price_rent_gap.png}
-\caption{Price--rent gap by capital city: the dwelling price index over the rent
+\caption{Price--rent gap by capital city, 2006:Q3--2025:Q4: the dwelling price index over the rent
 index (both 2011--12 $=100$). A rising series indicates prices outrunning rents.}
 \label{fig:price_rent_gap}
 \end{figure}
@@ -1216,28 +1266,28 @@ index (both 2011--12 $=100$). A rising series indicates prices outrunning rents.
 \centering
 \includegraphics[width=0.8\textwidth]{fig_real_rent.png}
 \caption{Wage-adjusted rents, rents relative to the state wage price index, by capital
-city. Broadly stable-to-declining until the pandemic, then recovering, with
+city, 2006:Q3--2025:Q4. Broadly stable-to-declining until the pandemic, then recovering, with
 Perth's mining-cycle collapse and rebound the main exception.}
 \label{fig:real_rent}
 \end{figure}
 
-Contemporaneously the contrast is stark. Interacting investor-credit growth with a
-post-2017 indicator, the interaction in the price equation is 0.056 ($p<0.01$)
-while the same interaction in the rent equation is 0.004 and is not statistically
-significant ($p=0.64$), an order of magnitude smaller. Taken at face value
-this says that after 2017 investor credit became a far stronger correlate of price
-growth than of rent growth.
+In the current quarter the contrast is stark. Interacting investor-credit growth
+with the post-2017 indicator (Table~\ref{tab:divergence}, Panel~A), the interaction
+in the price equation is 0.056 ($p<0.01$), while the same interaction in the rent
+equation is 0.004 and statistically insignificant ($p=0.64$), an order of magnitude
+smaller. Read literally, this says that after 2017 investor credit became a far
+stronger correlate of price growth than of rent growth.
 
-We do not take it fully at face value, because contemporaneous investor credit and
-prices are jointly determined: credit is drawn as purchases settle, so a
-within-quarter association partly reflects prices acting on credit as much as credit
-acting on prices. To gauge how much of the contrast is co-movement of this kind,
-Table~\ref{tab:divergence} re-estimates the interaction with investor credit entered
-as predetermined, lagged one quarter. Under predetermination the price interaction
-is 0.041 ($p<0.10$) while the rent interaction rises to 0.017 and is significant
-($p<0.01$). The two interactions, an order of magnitude apart contemporaneously,
-converge under predetermination to within roughly a factor of two and a half, as
-the rent response emerges once credit is lagged.
+We do not read it literally, because investor credit and prices are jointly
+determined within the quarter: credit is drawn as purchases settle, so a
+same-quarter association partly reflects prices acting on credit as much as credit
+acting on prices. To gauge how much of the gap is co-movement of this kind, Panel~B
+of Table~\ref{tab:divergence} re-estimates the interaction with credit entered one
+quarter lagged, so that prices cannot feed back into it within the period. The price
+interaction then falls to 0.041 ($p<0.10$) while the rent interaction rises to 0.017
+($p<0.01$). The two coefficients, an order of magnitude apart in the current quarter,
+converge to within roughly a factor of two and a half once credit is lagged, as the
+rent response emerges at the slower horizon on which it operates.
 
 \begin{table}[t]
 \centering
@@ -1248,37 +1298,39 @@ the rent response emerges once credit is lagged.
 \toprule
  & \multicolumn{1}{c}{Price equation} & \multicolumn{1}{c}{Rent equation} \\
 \midrule
-\multicolumn{3}{l}{\emph{Panel A. Contemporaneous credit}} \\
+\multicolumn{3}{l}{\emph{Panel A. Current-quarter credit}} \\
 $\Delta\ln$ Investor credit $\times$ post & 0.056\sym{***} & 0.004 \\
                                           & (0.021) & (0.008) \\
 \addlinespace
-\multicolumn{3}{l}{\emph{Panel B. Predetermined credit (lagged one quarter)}} \\
-$\Delta\ln$ Investor credit$_{t-1}\times$ post & 0.041\sym{*} & 0.017\sym{***} \\
-                                               & (0.023) & (0.006) \\
+\multicolumn{3}{l}{\emph{Panel B. One-quarter-lagged credit}} \\
+$\Delta\ln$ Investor credit $\times$ post & 0.041\sym{*} & 0.017\sym{***} \\
+                                          & (0.023) & (0.006) \\
 \bottomrule
 \end{tabular}
-\begin{tablenotes}\footnotesize
-\item Each cell is the interaction coefficient from the equation in
-Tables~\ref{tab:rent_eq}--\ref{tab:price_eq} augmented with the interaction. City
-fixed effects; Driscoll--Kraay standard errors in parentheses. \sym{*}$p<0.10$, \sym{**}$p<0.05$,
-\sym{***}$p<0.01$.
+\begin{tablenotes}[flushleft]\footnotesize
+\item Panel A enters investor credit in the current quarter; Panel B enters
+it one quarter lagged. Each cell reports the coefficient on the interaction
+between investor credit and the post-2017 indicator, from the equations in
+Tables~\ref{tab:rent_eq}--\ref{tab:price_eq} augmented with this interaction.
+City fixed effects; Driscoll--Kraay standard errors in parentheses.
+\sym{*}$p<0.10$, \sym{**}$p<0.05$, \sym{***}$p<0.01$.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
 
 The reading we adopt is therefore deliberately modest. Investor credit comoves more
-tightly with prices than with rents, and that asymmetry is large in the same quarter
-and attenuates, without vanishing, when credit is predetermined. Neither estimate is
-a structural causal elasticity: the contemporaneous figure overstates the role of
-credit through simultaneity, and the strictly lagged figure understates it by
-displacing a relationship that operates largely within the quarter. What survives
-both is a differential co-movement, prices tracking investor credit more closely
-than rents do, rather than evidence that credit causally drives prices and leaves
-rents untouched. The rent equation functions here as a placebo: if the price--credit
-association were a pure accounting artefact of joint determination, the same force
-would not so largely spare rents, and the persistence of a small but real
-credit--rent association under predetermination is consistent with credit affecting
-rents through a slower, supply-side channel.
+tightly with prices than with rents; the asymmetry is large in the same quarter and
+attenuates, without vanishing, once credit is lagged. Neither figure is a structural
+causal elasticity. The same-quarter estimate overstates the role of credit through
+simultaneity, and the strictly lagged estimate understates it by displacing a
+relationship that operates largely within the period; the truth lies between. What
+survives both is a differential co-movement, prices tracking investor credit more
+closely than rents do, rather than evidence that credit drives prices while leaving
+rents untouched. The rent equation serves as a placebo here: were the price--credit
+association a pure accounting artefact of joint determination, the same force would
+not so largely spare rents. That a small but real credit--rent association persists
+under lagging is instead consistent with credit reaching rents through a slower,
+supply-side channel.
 
 We further probe the robustness of the price--credit association in two ways
 (Appendix~\ref{sec:robustness}). First, we instrument investor-credit growth with a
@@ -1499,7 +1551,7 @@ dwellings and moderating inflow act on the same ratio. This argues for
 coordinating migration intake with housing supply capacity rather than
 treating them separately.
 
-Nonetheless, given the large volume of population flows, coordination
+For this reason, given the large volume of population flows, coordination
 with housing supply remains important. Because the paper estimates the
 determinants of rents rather than the effect of any policy, the
 following are illustrative of how the fundamentals result might inform
@@ -1634,8 +1686,8 @@ needed and take full responsibility for the content of the published
 article.
 
 \bibliographystyle{chicago}
-\bibliography{rent_disconnect_ferences}
-\newpage
+\bibliography{rent_disconnect_references}
+%\newpage
 \begin{appendices}
 \section{Structural Model}
 \label{sec:model}
@@ -1741,8 +1793,11 @@ $K_{jt}$, and a labour supply adjusted by the wage-to-housing-cost ratio
 $w_{jt}/h_{jt}$. Where housing costs rise fastest relative to wages,
 effective labour supply is squeezed most, one channel through which the
 housing-finance nexus feeds back into regional competitiveness.
-
+\newpage
 \section{Data Sources and Variable Definitions}
+
+Table~\ref{tab:data_sources} lists each variable used in the analysis,
+its source, geographic level, and time coverage.
 
 \begin{table}[!htbp]
 \small
@@ -1754,27 +1809,27 @@ housing-finance nexus feeds back into regional competitiveness.
 \toprule
 \textbf{Variable} & \textbf{Source} & \textbf{Geography} & \textbf{Coverage} \\
 \midrule
-\multicolumn{4}{l}{\textit{Outcome and Price Variables}} \\
+\multicolumn{4}{l}{\textit{Outcome and Price Variables}} \\[3pt]
 Rental Price Index & ABS 6401.0 (CPI rent component); monthly CPI indicator for recent quarters & Capital city & 1972:Q3--2025:Q4 \\
 Property Price Index & BIS (Sydney, all dwellings); ABS 6416.0 spliced to ABS mean dwelling price for other capitals & Capital city & 2003:Q3--2025:Q4 \\
 Mean Dwelling Price & ABS Total Value of Dwellings (continuation/splice input) & State & 2011:Q3--2026:Q1 \\
 \addlinespace
-\multicolumn{4}{l}{\textit{Construction and Investment}} \\
+\multicolumn{4}{l}{\textit{Construction and Investment}} \\[3pt]
 GFCF Public & ABS State Final Demand (current prices, SA) & State & 2003:Q1--2025:Q4 \\
 GFCF Private & ABS State Final Demand (current prices, SA) & State & 2003:Q1--2025:Q4 \\
 Investor Mortgage Demand & ABS Lending Indicators (investor housing commitments, dataflow successor to 5601.0 Table 14) & State & 2002:Q3--2026:Q1 \\
 National Housing Credit & RBA D2 (investor and owner-occupier credit; net loan-purpose switching) & National & 1990:Q1--2025:Q4 \\
 Dwelling Completions & ABS 8752.0 (Building Activity) & State & 1984:Q3--2025:Q4 \\
 \addlinespace
-\multicolumn{4}{l}{\textit{Labour Market}} \\
+\multicolumn{4}{l}{\textit{Labour Market}} \\[3pt]
 Employment & ABS 6202.0 (Labour Force) & State & 1978:Q1--2026:Q2 \\
 Wages (WPI) & ABS 6345.0 (Wage Price Index, quarterly) & State & 1997:Q3--2025:Q4 \\
 Housing Services & ABS State Final Demand (rent and dwelling services consumption) & State & 2003:Q1--2025:Q4 \\
 \addlinespace
-\multicolumn{4}{l}{\textit{Monetary Policy}} \\
+\multicolumn{4}{l}{\textit{Monetary Policy}} \\[3pt]
 Cash Rate & Reserve Bank of Australia & National & 1990:Q1--2025:Q4 \\
 \addlinespace
-\multicolumn{4}{l}{\textit{Demographic}} \\
+\multicolumn{4}{l}{\textit{Demographic}} \\[3pt]
 Net Overseas Migration & ABS 3101.0 (also OMAD by visa group) & State & 1981:Q2--2025:Q3 \\
 Net Interstate Migration & ABS 3101.0 & State & 1981:Q2--2025:Q3 \\
 \bottomrule
@@ -1787,6 +1842,8 @@ for 65--79\% of state economic activity.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
+
+\FloatBarrier
 
 \section{Statistical Tests and Supplementary Results}
 
@@ -1816,27 +1873,31 @@ Table~\ref{tab:divergence} and the local projections in
 Figure~\ref{fig:lp} carry the argument.
 
 \paragraph{Timing and breadth of the post-2017 shift}
+
 Two interaction specifications bound the interpretation of the
-post-2017 result. Adding a separate post-2020 (pandemic) interaction on
+post-2017 result. Adding a separate post-2020 pandemic interaction on
 investor credit alongside the post-2017 interaction leaves the 2017
-term in place while the additional pandemic term is small and
-imprecise, indicating that the strengthening of the channel is not
-purely a pandemic phenomenon even though its largest movements occur in
+term in place, while the additional pandemic term is small and
+imprecise. This indicates that the strengthening of the channel is not
+purely a pandemic phenomenon, even though its largest movements occur in
 2020--2022. Allowing the post-2017 investor interaction to differ for
-Sydney, the city targeted by the 2017 package, returns a negative
-Sydney-specific term that is not statistically significant ($-0.024$,
-$p = 0.13$ under Driscoll--Kraay standard errors); Sydney's implied
-total post-2017 credit slope ($+0.037$) lies below the other capitals'
-common slope ($+0.061$) and is itself indistinguishable from zero
-($\chi^2_1 = 1.80$, $p = 0.18$). The post-2017 investor channel is thus
-present across the capitals and, if anything, no stronger in Sydney than
-elsewhere. Whatever the source of that smaller Sydney response, the
-shift is plainly not concentrated in the treated market, which is the
-relevant point for ruling out a Sydney-driven, NSW-policy
-interpretation: a policy-driven reading would require the channel to be
-\emph{strongest} in Sydney, and it is not. Both readings are consistent with treating the 2017
-package as one marker within a longer structural shift rather than as
-its cause.
+Sydney, the city to which the 2017 NSW package applied, returns a
+negative Sydney-specific term that is not statistically significant
+($-0.024$, $p = 0.13$ under Driscoll--Kraay standard errors). Sydney's
+implied total post-2017 credit slope ($+0.037$) lies below the other
+capitals' common slope ($+0.061$) and is itself indistinguishable from
+zero ($\chi^2_1 = 1.80$, $p = 0.18$).
+
+The post-2017 investor channel is therefore broad-based in the pooled
+panel and not stronger in Sydney. Whatever the source of Sydney's
+smaller response, the shift is not concentrated in the city to which the
+NSW package applied. This weakens a Sydney-driven NSW-policy
+interpretation: a simple policy-driven reading would predict the
+post-2017 investor-credit channel to be strongest in Sydney, and it is
+not. The evidence is more consistent with treating the 2017 package as
+one marker within a longer structural shift rather than as its cause.
+
+
 
 \paragraph{Rolling decomposition}
 Figure~\ref{fig:rolling} traces the contemporaneous partial $R^2$ of
@@ -1962,8 +2023,6 @@ from the main text in favour of the local-projection evidence
 (Figure~\ref{fig:lp}); reported here as a descriptive complement.}
 \label{fig:rolling}
 \end{figure}
-
-
 
 
 
