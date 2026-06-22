@@ -62,6 +62,15 @@ rent_fe <- plm(diff(l_rent) ~ dplyr::lag(l_pr_gap,1) + dplyr::lag(tightness,1) +
 cat("\n================  RENT EQUATION (within, FD)  ================\n")
 print(dk_coeftest(rent_fe)); save_txt(dk_coeftest(rent_fe), "est_rent.txt")
 
+# Within-R^2 for the FD rent equation. dk_coeftest reports only the coefficient
+# table, so the goodness-of-fit is pulled from summary.plm()'s r.squared vector
+# (rsq = within R^2, adjrsq = adjusted). This is the figure for the Table 3
+# Panel A "Within (FD)" R^2 cell; the mean-group R^2 below is a separate number.
+rent_fe_r2 <- summary(rent_fe)$r.squared
+cat(sprintf("  Rent eqn FD within-R2 = %.4f (adj %.4f), N = %d\n",
+            rent_fe_r2["rsq"], rent_fe_r2["adjrsq"], nobs(rent_fe)))
+save_txt(rent_fe_r2, "est_rent_r2.txt")
+
 rent_mg <- pmg(diff(l_rent) ~ dplyr::lag(l_pr_gap,1) + dplyr::lag(tightness,1) + diff(l_wpi) + diff(l_emp),
                data = P, model = "mg")
 cat("\n----------------  RENT EQUATION (mean-group)  ----------------\n")
@@ -126,14 +135,43 @@ price_div_covid <- plm(diff(l_price) ~ diff(l_inv) + diff(l_inv):post + diff(l_i
 cat("\n----  ROBUSTNESS (i): COVID timing vs 2017 (price eqn)  ----\n")
 print(dk_coeftest(price_div_covid)); save_txt(dk_coeftest(price_div_covid), "est_price_divergence_covid.txt")
 
+# Driscoll--Kraay vcov helper (used by the Sydney linear-combination test below
+# and the Wald tests that follow).
+dk_vcov <- function(x) plm::vcovSCC(x, type = "HC0", maxlag = 4)
+
 price_div_syd <- plm(diff(l_price) ~ diff(l_inv) + diff(l_inv):post + diff(l_inv):post:syd +
                        diff(cash_rate) + dplyr::lag(tightness,1) + diff(l_wpi) + post,
                      data = Pdf, model = "within", effect = "individual")
 cat("\n----  ROBUSTNESS (ii): Sydney-specific channel (price eqn)  ----\n")
 print(dk_coeftest(price_div_syd)); save_txt(dk_coeftest(price_div_syd), "est_price_divergence_sydney.txt")
 
+# Sydney TOTAL post-2017 credit slope and its deviation, both tested explicitly.
+# The triple-interaction tests the DEVIATION (Sydney minus the rest of the
+# capitals). This block also recovers Sydney's own post-2017 slope (common +
+# deviation) and tests it against zero with a Driscoll--Kraay linear-combination
+# (Wald) test. The published claim is that Sydney does not LEAD the other
+# capitals; the relevant facts are that the deviation is negative but not
+# significant and Sydney's total slope sits below the rest and is itself
+# indistinguishable from zero.
+syd_ct  <- dk_coeftest(price_div_syd)
+b_dev   <- syd_ct["diff(l_inv):post:syd", 1]   # Sydney deviation from the rest
+b_post  <- syd_ct["diff(l_inv):post", 1]       # rest-of-country post slope
+cat(sprintf("  Sydney deviation (post x syd) = %+.4f (p=%.3f, DK)\n",
+            b_dev, syd_ct["diff(l_inv):post:syd", 4]))
+cat(sprintf("  Rest-of-country post slope    = %+.4f\n", b_post))
+cat(sprintf("  Implied Sydney total post slope = %+.4f\n", b_post + b_dev))
+if (requireNamespace("car", quietly = TRUE)) {
+  syd_lc <- car::linearHypothesis(
+    price_div_syd,
+    "diff(l_inv):post + diff(l_inv):post:syd = 0",
+    vcov. = dk_vcov(price_div_syd))
+  cat("  Linear-combination test that Sydney's TOTAL post slope = 0 (DK vcov):\n")
+  print(syd_lc); save_txt(syd_lc, "est_price_sydney_totalslope.txt")
+} else {
+  cat("  (car not installed; skipping the Sydney total-slope linear-combination test.)\n")
+}
+
 # Wald tests (DK vcov), per equation: reject for PRICE, fail to reject for RENT.
-dk_vcov <- function(x) plm::vcovSCC(x, type = "HC0", maxlag = 4)
 price_r0 <- plm(diff(l_price) ~ diff(l_inv) + post + diff(cash_rate) + dplyr::lag(tightness,1) + diff(l_wpi),
                 data = P, model = "within", effect = "individual")
 rent_r0  <- plm(diff(l_rent)  ~ diff(l_inv) + post + diff(cash_rate) + dplyr::lag(tightness,1) + diff(l_wpi) + diff(l_emp),

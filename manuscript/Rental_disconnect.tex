@@ -37,6 +37,7 @@
 
 \usepackage{graphicx}
 \usepackage{accsupp}
+\usepackage{url}
 \usepackage[titletoc,title]{appendix}
 
 % Layout and formatting
@@ -83,7 +84,7 @@
 \begin{frontmatter}
 
 \title{Credit, Fundamentals, and the Price--Rent Disconnect in
-Australian Housing Markets:\\
+Australian Housing Markets:
 Evidence from Five Capital Cities, 2006--2025}
 %\author[1]{Ainura Tursunalieva\footnote{ORCID: 0000-0003-2784-9031}}
 %\ead{ainura.tursunalieva@data61.csiro.au}
@@ -105,53 +106,40 @@ Evidence from Five Capital Cities, 2006--2025}
 %country={Australia}}
 
 \begin{abstract}
-We document a structural change in how dwelling prices and rents are
-determined across Australia's five largest capital-city markets, and
-characterise how a common credit impulse reaches each. Using quarterly
-data for
-2006:Q3--2025:Q4, we estimate two reduced-form equations on the
-within-city time dimension: a rent equation and a price equation.
-Rents are well explained by market fundamentals throughout the
-sample, namely a migration-to-completions tightness measure, wage growth, and
-employment, and this fundamentals structure remains the operative one
-throughout, though the relative weight of its channels shifts over time,
-with the employment channel strengthening in the second half of the
-sample. The price
-equation tells a different story. Investor mortgage demand comoves far
-more tightly with dwelling prices than with rents, and after 2017 this
-asymmetry widens. Because investor credit and prices are partly
-determined within the same quarter, we bound the relationship: the
-contemporaneous association is large, and it attenuates but does not
-vanish when credit is entered as predetermined. Panel local
-projections resolve the timing: a credit innovation is capitalised
-into prices on impact and reaches rents with a delay, with the
-preferred specification showing little rent response during the first
-year and a gradual build-up thereafter, so the two responses converge
-over a three-year horizon. The
-decoupling is thus a difference in transmission speed and a medium-run
-wedge rather than a permanent insulation of rents from financial
-conditions. The strengthening of the price--investor-credit channel is
-broad-based across all five capitals rather than concentrated in any
-single city. We interpret the breakdown of the
-price--rent relationship as the two markets coming to be governed by
-different forces: rents by local housing fundamentals, prices
-increasingly by the cost and availability of investor finance. This has
-a direct policy implication. Because the two sides of the market respond
-to different drivers on different timescales, an instrument calibrated to
-one side, a rental-affordability measure acting on a demand side still
-anchored to fundamentals, is poorly aligned with a price side that
-responds to financial conditions; the rent consequences of a
-credit-driven price boom, in particular, materialise only after a delay.
-We document this separation rather than estimate the effect of any single
-policy, and our extended panel does not support a reading in which
-identical national policy produces a financialization gradient across
-cities.
+We document a structural change in the determinants of dwelling prices
+and rents across Australia's five largest capital-city markets and
+characterise how a common credit impulse propagates through each. Using
+quarterly data from 2006 to 2025, we estimate two reduced-form equations
+exploiting within-city variation over time.
+
+Rents are consistently explained by market fundamentals: a
+migration-to-completions measure of housing-market tightness, wage
+growth, and employment, with the employment channel strengthening over
+time. Prices differ. Investor mortgage demand co-moves much more strongly
+with prices than with rents, and this asymmetry sharpens after 2017.
+
+Because credit and prices are jointly determined within the quarter, we
+bound rather than point-estimate their relationship. The contemporaneous
+association is large and remains economically meaningful even when credit
+is treated as predetermined. Panel local projections identify the
+transmission dynamics: credit shocks are capitalised into prices
+immediately but reach rents only with a delay. In the preferred
+specification, rents respond little during the first year, then rise
+gradually, with prices and rents converging over a three-year horizon.
+
+The decoupling thus reflects differences in transmission speed rather
+than permanent insulation of rents from financial conditions. The
+strengthening of the price--investor-credit channel is evident across
+all five capitals. We interpret the breakdown in the price--rent
+relationship as evidence that the two markets are increasingly governed
+by different forces: rents by local fundamentals, prices by investor
+finance. Our contribution is to document this separation rather than to
+identify the effects of any particular policy.
 \end{abstract}
 
 \begin{keyword}
-Regional development \sep Housing financialization \sep Rental markets
-\sep Price--rent disconnect \sep Investor credit \sep
-Negative gearing \sep Local projections
+Financialization \sep Price--rent disconnect \sep Investor credit
+\sep Negative gearing \sep Local projections \sep Rental markets
 \end{keyword}
 
 \tnotetext[1]{\textbf{JEL classification:} R21, R23, R28, R31, H53, C23}
@@ -642,15 +630,19 @@ cross-section.
 
 Our empirical design uses quarterly data from five Australian capital
 cities (Sydney, Melbourne, Brisbane, Adelaide, and Perth) covering
-2006:Q3 to 2025:Q4, with most series extending to 2025:Q4 and the
-binding endpoint set by the publication lag of net migration. The
-within-city time dimension carries the identification: about seventy-eight
-quarters of data per market, roughly seventy after differencing and
-lagged terms enter the estimation, estimated jointly across the five
-capitals. We document below three corrections to the price and flow
-series relative to earlier versions of this panel, together with the
-construction of a continuous price index after the discontinuation of
-the ABS capital-city series in 2021.
+2006:Q3 to 2025:Q4. Most series, including rents, prices, wages,
+employment, and investor credit, extend to 2025:Q4; net migration, and
+hence the constructed market-tightness measure, is published with a lag
+and ends one quarter earlier, in 2025:Q3, which binds the usable endpoint
+for any tightness-dependent specification. The within-city time dimension
+carries the identification: up to seventy-eight quarters of data per
+market, of which the estimation uses seventy-four city-quarters
+(370 city-quarters in total) once differencing and the trailing-window
+tightness construction and its lag drop the early warm-up quarters,
+estimated jointly across the five capitals. We document below three
+corrections to the price and flow series relative to earlier versions of
+this panel, together with the construction of a continuous price index
+after the discontinuation of the ABS capital-city series in 2021.
 
 The panel window is determined by binding data constraints: capital city
 property price indices from the Australian Bureau of Statistics (ABS)
@@ -1317,7 +1309,7 @@ the third year, drifting up to about 3.9 percent (0.039 log points) by the twelf
 with a shallow mid-window
 dip that lies within the bands. Rents are flat and
 indistinguishable from zero through the first year, then climb steadily to
-about 2.3 percent (0.023 log points) by the twelfth quarter. The horizon
+about 2.0 percent (0.020 log points) by the twelfth quarter. The horizon
 at which the rent response first becomes significant is sensitive to the
 number of control lags, falling between the second and the seventh quarter
 depending on that choice, so we treat it as approximate; what is stable
@@ -1363,7 +1355,7 @@ quarter out are predetermined, and the long-horizon estimates are less precise.}
 \label{sec:descriptive}
 
 The price--rent ratio rose across all five capitals from near parity in the early
-2010s to between $1.4$ and $2.0$ by 2025, most in Sydney
+2010s, peaking between roughly $1.4$ and $2.0$, most in Sydney
 (Figure~\ref{fig:price_rent_gap}). Real rents (rents deflated by wages) were broadly
 stable-to-declining until the pandemic and then recovered, with Perth the notable
 exception (a sharp mining-cycle rent collapse and rebound), consistent with rents
@@ -1422,9 +1414,11 @@ by it.
 
 The financialization is also not concentrated in Sydney, the city
 targeted by the 2017 package. A Sydney-specific investor interaction is
-in fact negative and significant: the post-2017 price--credit channel
-operates across the capitals and is, if anything, weaker in Sydney than
-elsewhere. This is the most important difference between our findings
+negative, placing Sydney's incremental post-2017 credit slope below the
+other capitals', though the difference is not statistically significant
+($-0.024$, $p = 0.13$): the post-2017 price--credit channel
+operates across the capitals and is, if anything, no stronger in Sydney
+than elsewhere. This is the most important difference between our findings
 and a policy-evaluation reading of the same period. The change is not a
 NSW phenomenon transmitted by a NSW reform; if it were, it would be
 strongest in the treated city, and it is not. It is better understood
@@ -1617,10 +1611,24 @@ would further test the channel at the level of the individual dwelling.
 This research received no external funding.
 
 \section*{Data Availability Statement}
-The data supporting the findings of this study are available from the corresponding author upon reasonable request.
+The data and code required to reproduce the results in this paper are
+openly available in the replication repository at
+\url{https://github.com/Ainura-tur/price-rent-disconnect}. The
+repository contains the full estimation pipeline and the raw input
+series obtained from the Australian Bureau of Statistics (under
+CC BY 4.0), the Reserve Bank of Australia, and the Bank for
+International Settlements, each redistributed under its source's terms
+with attribution as documented therein.
 
 \section*{Declaration of Interest Statement}
 The authors report there are no competing interests to declare.
+
+\section*{Declaration of Generative AI in the Writing Process}
+During the preparation of this work the authors used a generative AI
+assistant for language editing, code review, and consistency checking.
+After using this tool, the authors reviewed and edited the content as
+needed and take full responsibility for the content of the published
+article.
 
 \bibliographystyle{chicago}
 \bibliography{sydney_rent_ref1}
@@ -1764,8 +1772,8 @@ Housing Services & ABS State Final Demand (rent and dwelling services consumptio
 Cash Rate & Reserve Bank of Australia & National & 1990:Q1--2025:Q4 \\
 \addlinespace
 \multicolumn{4}{l}{\textit{Demographic}} \\
-Net Overseas Migration & ABS 3101.0 (also OMAD by visa group, to 2025:Q3) & State & 1981:Q2--2025:Q4 \\
-Net Interstate Migration & ABS 3101.0 & State & 1981:Q2--2025:Q4 \\
+Net Overseas Migration & ABS 3101.0 (also OMAD by visa group) & State & 1981:Q2--2025:Q3 \\
+Net Interstate Migration & ABS 3101.0 & State & 1981:Q2--2025:Q3 \\
 \bottomrule
 \end{tabular*}
 \begin{tablenotes}[flushleft]
@@ -1812,13 +1820,18 @@ term in place while the additional pandemic term is small and
 imprecise, indicating that the strengthening of the channel is not
 purely a pandemic phenomenon even though its largest movements occur in
 2020--2022. Allowing the post-2017 investor interaction to differ for
-Sydney, the city targeted by the 2017 package, returns a negative and
-significant Sydney-specific term: the post-2017 investor channel is
-present across the capitals and, if anything, weaker in Sydney than
+Sydney, the city targeted by the 2017 package, returns a negative
+Sydney-specific term that is not statistically significant ($-0.024$,
+$p = 0.13$ under Driscoll--Kraay standard errors); Sydney's implied
+total post-2017 credit slope ($+0.037$) lies below the other capitals'
+common slope ($+0.061$) and is itself indistinguishable from zero
+($\chi^2_1 = 1.80$, $p = 0.18$). The post-2017 investor channel is thus
+present across the capitals and, if anything, no stronger in Sydney than
 elsewhere. Whatever the source of that smaller Sydney response, the
 shift is plainly not concentrated in the treated market, which is the
 relevant point for ruling out a Sydney-driven, NSW-policy
-interpretation. Both readings are consistent with treating the 2017
+interpretation: a policy-driven reading would require the channel to be
+\emph{strongest} in Sydney, and it is not. Both readings are consistent with treating the 2017
 package as one marker within a longer structural shift rather than as
 its cause.
 
