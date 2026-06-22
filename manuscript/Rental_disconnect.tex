@@ -84,7 +84,7 @@
 \begin{frontmatter}
 
 \title{Credit, Fundamentals, and the Price--Rent Disconnect in
-Australian Housing Markets:
+Australian Housing Markets:\\
 Evidence from Five Capital Cities, 2006--2025}
 %\author[1]{Ainura Tursunalieva\footnote{ORCID: 0000-0003-2784-9031}}
 %\ead{ainura.tursunalieva@data61.csiro.au}
@@ -129,8 +129,9 @@ gradually, with prices and rents converging over a three-year horizon.
 
 The decoupling thus reflects differences in transmission speed rather
 than permanent insulation of rents from financial conditions. The
-strengthening of the price--investor-credit channel is evident across
-all five capitals. We interpret the breakdown in the price--rent
+strengthening of the price--investor-credit channel is broad-based in
+the pooled panel rather than concentrated in the most heavily invested
+city. We interpret the breakdown in the price--rent
 relationship as evidence that the two markets are increasingly governed
 by different forces: rents by local fundamentals, prices by investor
 finance. Our contribution is to document this separation rather than to
@@ -149,7 +150,7 @@ Financialization \sep Price--rent disconnect \sep Investor credit
 \section{Introduction}
 \label{sec:introduction}
 
-Regional development theory has long emphasized the coordination of
+Regional development theory has long emphasised the coordination of
 economic growth, employment, and social equity within specific
 territorial contexts \citep{kuklinski1970regional}, assuming that
 market mechanisms would align investment with regional needs through
@@ -202,7 +203,7 @@ determination evolved over time within each market.
 
 Three features make this setting particularly relevant. First,
 Australia's negative gearing system fosters a distinctive investor
-landscape, which \citet{hulse2020everyman} characterizes as ``mum and
+landscape, which \citet{hulse2020everyman} characterises as ``mum and
 dad'' financialization, setting it apart from institutional models in
 other countries. Second, the federal structure generates multi-scalar policy
 interactions, with national monetary and tax settings intersecting
@@ -237,9 +238,8 @@ wages, and employment. A price equation relates price growth to the
 cost of capital (the cash rate) and investor mortgage demand, alongside
 the same fundamentals. We then test whether the financial driver in
 each equation changed after 2017 by interacting investor credit with a
-post-2017 indicator, and we trace the timing with a rolling-window
-decomposition of the share of variation each equation attributes to
-investor demand. The design is descriptive: each equation is a standard
+post-2017 indicator, and we trace the timing with panel local
+projections of prices and rents on an investor-credit innovation. The design is descriptive: each equation is a standard
 reduced form, and we make no claim to identify the causal effect of any
 single policy. This is deliberate. It answers the natural ``correlation,
 not causation'' objection by not overclaiming causation, and it
@@ -276,8 +276,8 @@ gradual build-up thereafter, at the slower speed of occupancy
 and supply; over a three-year horizon the two responses converge. The
 disconnect is therefore a difference in transmission speed and a
 medium-run wedge rather than a permanent insulation of rents from
-financial conditions. We further show the pattern is present across
-the five capitals and not concentrated in Sydney, the city targeted
+financial conditions. We further show the pattern is broad-based in the
+pooled panel and not concentrated in Sydney, the city targeted
 by the 2017 package, and that its sharpest movements are centred on the
 pandemic period, so we treat the 2017 reform as one marker within a
 longer structural shift rather than as its cause. A genuinely
@@ -579,9 +579,9 @@ strengthens after the break.
 
 \subsection{Empirical Specification}
 
-Building on the theoretical framework, we estimate a reduced-form
-rental price equation (Equation~\ref{eq:reduced_regional}) as an
-autoregressive distributed lag (ARDL) model for city $j$:
+Building on the theoretical framework, we write the reduced-form
+rental price relationship (Equation~\ref{eq:reduced_regional}) in an
+autoregressive distributed lag (ARDL) representation for city $j$:
 
 \begin{equation}
 \label{eq:empirical}
@@ -589,10 +589,17 @@ R_{jt} = \beta_{0j} + \alpha_{1j} R_{j,t-1} + \alpha_{2j} \text{POST}_{t}
 + \mathbf{X}_{jt}'\boldsymbol{\beta}_j + \varepsilon_{jt}
 \end{equation}
 
-Here, $R_{jt}$ denotes the rental price index in city $j$; $\text{POST}_{t}=\mathds{1}[t\geq 2017\mathrm{:}Q1]$ for all cities.
-This is a policy intervention dummy capturing city-specific housing reforms, which, for non-Sydney cities, captures the post-2017 institutional environment broadly, while in Sydney it is related to the public housing reform.
-%(equal to 1 from 2017:Q1 onward for Sydney);
- We denote  a Sydney-only NSW-reform indicator as
+This is the level representation that motivates the parsimonious
+first-difference models we actually estimate (Section~\ref{sec:methods});
+we do not estimate this level equation directly. Here $R_{jt}$ denotes
+the rental price index in city $j$, and
+$\text{POST}_{t}=\mathds{1}[t\geq 2017\mathrm{:}Q1]$ for all cities is a
+structural-break indicator, not a treatment whose causal effect we
+estimate: it marks a candidate break in the sample around which we test
+whether the determinants of prices and rents change. For non-Sydney
+cities it captures the post-2017 institutional environment broadly, while
+in Sydney it coincides with the public housing reform. We denote a
+Sydney-only NSW-reform indicator as
 $D_{jt}^{NSW}=\mathds{1}[j=\text{Sydney}]\cdot \text{POST}_{t}$ and $\mathbf{X}_{jt}$ is a
 vector of explanatory variables derived from the theoretical model.
 Specifically,
@@ -759,7 +766,8 @@ Three patterns in Table~\ref{tab:cross_city_summary} describe the
 variation in the panel. First, the post-2017 decline in the
 property--rental correlation is largest in Sydney and Melbourne and
 small or absent in the other capitals; we report this as a descriptive
-contrast, not as an identified gradient (Figure~\ref{fig:price_ts}).
+contrast, not as an identified gradient
+(Table~\ref{tab:cross_city_summary}).
 Second, migration pressures are unevenly distributed: Sydney and
 Melbourne receive large overseas inflows but experience net interstate
 outflows, consistent with affordability-driven displacement
@@ -982,7 +990,7 @@ average.
 \label{eq:price}
 \Delta p_{it} = \gamma_i + c_1\,\Delta \text{CASH}_t
  + c_2\,\Delta \iota_{it} + c_3\,\text{TIGHT}_{i,t-1}
- + c_4\,\Delta w_{it} + \eta_{it},
+ + \eta_{it},
 \end{equation}
 where $p$ is log price, $\text{CASH}$ the cash rate, and $\iota$ log
 investor mortgage commitments.
@@ -1196,8 +1204,9 @@ standard errors in parentheses. Wage growth is excluded from the price equation.
 
 The descriptive starting point is that prices pulled away from rents over the
 sample, sharply so from 2020. Figure~\ref{fig:price_rent_gap} shows the price--rent
-ratio rising in every capital, and Figure~\ref{fig:real_rent} shows real rents,
-deflated by wages, moving on a quite different path driven by local conditions
+ratio rising in every capital, and Figure~\ref{fig:real_rent} shows
+wage-adjusted rents (rents relative to the wage price index)
+moving on a quite different path driven by local conditions
 rather than by the price cycle. The question is whether this decoupling reflects
 investor credit operating on prices in a way it does not operate on rents.
 
@@ -1212,7 +1221,7 @@ index (both 2011--12 $=100$). A rising series indicates prices outrunning rents.
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.8\textwidth]{fig_real_rent.png}
-\caption{Real rents, rents deflated by the state wage price index, by capital
+\caption{Wage-adjusted rents, rents relative to the state wage price index, by capital
 city. Broadly stable-to-declining until the pandemic, then recovering, with
 Perth's mining-cycle collapse and rebound the main exception.}
 \label{fig:real_rent}
@@ -1356,7 +1365,7 @@ quarter out are predetermined, and the long-horizon estimates are less precise.}
 
 The price--rent ratio rose across all five capitals from near parity in the early
 2010s, peaking between roughly $1.4$ and $2.0$, most in Sydney
-(Figure~\ref{fig:price_rent_gap}). Real rents (rents deflated by wages) were broadly
+(Figure~\ref{fig:price_rent_gap}). Wage-adjusted rents (rents relative to wages) were broadly
 stable-to-declining until the pandemic and then recovered, with Perth the notable
 exception (a sharp mining-cycle rent collapse and rebound), consistent with rents
 responding to local fundamentals (Figure~\ref{fig:real_rent}). We report the
@@ -1576,8 +1585,8 @@ rather than rents never responding.
 
 Two further checks bound the result. The strengthening of the investor
 channel is not purely a pandemic phenomenon, since a separate pandemic
-interaction adds little once a 2017 break is allowed, and it is present
-across all five capitals and not concentrated in Sydney, the city
+interaction adds little once a 2017 break is allowed, and it is
+broad-based in the pooled panel rather than concentrated in Sydney, the city
 targeted by the 2017 NSW package; if anything it is weaker there. The
 change is therefore better understood as a general shift in how
 Australian dwelling prices are determined than as the effect of any

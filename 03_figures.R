@@ -45,8 +45,8 @@ ggsave(file.path(OUTDIR, "fig_real_rent.png"),
        ggplot(panel, aes(qn, real_rent, colour = city)) +
          geom_vline(xintercept = 2017, linetype = "dashed", colour = "grey50") +
          geom_line(linewidth = 0.7) + scale_colour_manual(values = CITY_COLS) +
-         labs(title = "Real rents (rents deflated by wages)",
-              subtitle = "rents / wpi; the affordability angle tied to the policy's stated aim",
+         labs(title = "Wage-adjusted rents (rents relative to wages)",
+              subtitle = "rent / WPI; the affordability angle tied to the policy's stated aim",
               x = NULL, y = "Rent / WPI"),
        width = 9, height = 5, dpi = 150)
 
