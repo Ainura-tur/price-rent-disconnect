@@ -233,8 +233,8 @@ quarterly panel can bear it: on the within-city time dimension, which
 contains roughly seventy quarters of variation per market, rather than
 on the thin five-unit cross-section. We estimate two reduced-form
 equations. A rent equation relates rent growth to a market-tightness
-fundamental (net migration relative to dwelling completions), real
-wages, and employment. A price equation relates price growth to the
+fundamental (net migration relative to dwelling completions), wage
+growth, and employment. A price equation relates price growth to the
 cost of capital (the cash rate) and investor mortgage demand, alongside
 the same fundamentals. We then test whether the financial driver in
 each equation changed after 2017 by interacting investor credit with a
@@ -579,30 +579,23 @@ strengthens after the break.
 
 \subsection{Empirical Specification}
 
-Building on the theoretical framework, we write the reduced-form
-rental price relationship (Equation~\ref{eq:reduced_regional}) in an
-autoregressive distributed lag (ARDL) representation for city $j$:
-
-\begin{equation}
-\label{eq:empirical}
-R_{jt} = \beta_{0j} + \alpha_{1j} R_{j,t-1} + \alpha_{2j} \text{POST}_{t}
-+ \mathbf{X}_{jt}'\boldsymbol{\beta}_j + \varepsilon_{jt}
-\end{equation}
-
-This is the level representation that motivates the parsimonious
-first-difference models we actually estimate (Section~\ref{sec:methods});
-we do not estimate this level equation directly. Here $R_{jt}$ denotes
-the rental price index in city $j$, and
-$\text{POST}_{t}=\mathds{1}[t\geq 2017\mathrm{:}Q1]$ for all cities is a
-structural-break indicator, not a treatment whose causal effect we
+Building on the theoretical framework, the reduced-form rental price
+relationship (Equation~\ref{eq:reduced_regional}) collects a city
+intercept, a post-2017 break indicator, and a vector of lagged
+explanatory variables; we estimate its parsimonious first-difference
+specialisation (Section~\ref{sec:methods}) rather than a level equation.
+The break indicator is
+$\text{POST}_{t}=\mathds{1}[t\geq 2017\mathrm{:}Q1]$ for all cities. It
+is a structural-break indicator, not a treatment whose causal effect we
 estimate: it marks a candidate break in the sample around which we test
 whether the determinants of prices and rents change. For non-Sydney
 cities it captures the post-2017 institutional environment broadly, while
 in Sydney it coincides with the public housing reform. We denote a
 Sydney-only NSW-reform indicator as
-$D_{jt}^{NSW}=\mathds{1}[j=\text{Sydney}]\cdot \text{POST}_{t}$ and $\mathbf{X}_{jt}$ is a
-vector of explanatory variables derived from the theoretical model.
-Specifically,
+$D_{jt}^{NSW}=\mathds{1}[j=\text{Sydney}]\cdot \text{POST}_{t}$.
+
+The full vector of explanatory variables derived from the theoretical model
+is
 $\mathbf{X}_{jt} = [C_{j,t-1},\; r_{t-1},\; GFCF^{P}_{j,t-1},\;
 GFCF^{G}_{j,t-1},\; P_{j,t-1},\; M_{j,t-1},\; w_{j,t-1},\;
 N_{j,t-1},\; HHS_{jt}]$. In this specification, $C_{j,t-1}$ refers to
@@ -610,6 +603,7 @@ construction costs; $r_{t-1}$ to the lagged cash rate (national);
 $P_{j,t-1}$ is the property price index; $M_{j,t-1}$ captures net
 migration flows; $w_{j,t-1}$ and $N_{j,t-1}$ denote average wages and
 employment; and we proxy  owner-occupier demand, $NH_{jt}$, using household housing services consumption $(HHS_{jt})$.
+
 To model the crowding-out effect, the concurrent competition between
 public and private investment for construction capacity, the theoretical
 specification includes public and private Gross Fixed Capital Formation
@@ -1640,7 +1634,7 @@ needed and take full responsibility for the content of the published
 article.
 
 \bibliographystyle{chicago}
-\bibliography{sydney_rent_ref1}
+\bibliography{rent_disconnect_ferences}
 \newpage
 \begin{appendices}
 \section{Structural Model}
