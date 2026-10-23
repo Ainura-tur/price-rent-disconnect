@@ -255,8 +255,8 @@ fig_divergence.png            Figure 8
 rolling_partial_r2.csv        descriptive_figures_summary.txt
 ```
 
-Figure 1 is TikZ in the `.tex`, and Table 7 lists the data sources, so no
-script produces them.
+Figure 1 is TikZ in the `.tex`, and Table 7 lists the data sources. No script
+in the pipeline produces Table 1, the cross-city summary statistics.
 
 ### Standalone diagnostics (run by hand)
 

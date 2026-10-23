@@ -126,7 +126,7 @@ Beyond the merge:
    seasonal noise also faded after 2017, which made the credit-price link look
    stronger after 2017 than it was. The revision's steps therefore use the
    seasonally adjusted series as the main measure (see "Data sources").
-2. **Ten new steps.**
+2. **Nine new steps.**
    - `01a_build_test_panel.R` builds `clean/panel_tests`: adjusted credit, the
      investor share, indicators of the APRA lending measures, lags and sample
      flags.
@@ -156,9 +156,9 @@ Beyond the merge:
    `run_logs/`. `run_all.R` now runs each step in its own R session and skips a
    step whose input step failed. The `{targets}` pipeline was removed, because
    it covered only the four June steps.
-6. **Three changes to `02_estimate.R`.** The wild bootstrap seeds both of
-   R's random number generators (`set.seed()` and `dqrng::dqset.seed()`), so its
-   p-value repeats exactly. The rolling-window regressions report
+6. **Three changes to `02_estimate.R`.** The wild bootstrap seeds both random
+   number generators it uses, R's (`set.seed()`) and dqrng's
+   (`dqrng::dqset.seed()`), so its p-value repeats exactly. The rolling-window regressions report
    Driscoll-Kraay p-values, whose counts Section 4.2 quotes. The cointegration
    fallback judges each city's residual ADF statistic against the Engle-Granger
    5 percent critical value (about -3.42); the Pedroni critical values apply
