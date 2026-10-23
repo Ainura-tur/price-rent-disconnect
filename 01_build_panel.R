@@ -5,7 +5,8 @@
 #   A. Reconstruct a continuous five-city property price index (BIS for Sydney,
 #      6416.0 + ABS-mean-price splice for the others), rebased to 2011-12 = 100.
 #   B. Take the existing paper panel, swap in the reconstructed price, replace
-#      the mis-dated migration and completions series, attach investor lending.
+#      the mis-dated migration, completions and wage series, drop two series
+#      that no source extends, attach investor lending.
 #   C. Extend every series to TARGET_END by growth-chaining recent ABS quarters
 #      onto the 2024Q3 level, build derived variables, write clean/panel_combined.
 #
@@ -17,6 +18,10 @@
 # Output: clean/panel_combined.{rds,csv}, output/panel_combined.csv,
 #         clean/price_panel.{rds,csv}, and (optional) diagnostic plots.
 # =============================================================================
+
+# Log this run in run_logs/ (see 00_run_log.R); the last line closes the log.
+source("00_run_log.R")
+start_run_log("01_build_panel")
 
 # Namespace protection (avoid MASS/stats masking dplyr verbs)
 select <- dplyr::select;       filter    <- dplyr::filter
@@ -36,8 +41,9 @@ f_6416 <- file.path(RAW, "641601.xlsx")
 f_bis  <- file.path(RAW, "bis_dp_search_export_20260615-045639.csv")
 f_abs  <- file.path(RAW, "ABS_RES_DWELL_ST_1_0_0__1_2_3_4_5_Q.csv")
 
-# 6416.0 per-city index (historical leg), located by position.
-r6416   <- read_excel(f_6416, sheet = "Data1", col_names = FALSE)
+# 6416.0 per-city index (historical leg), located by position. "unique_quiet"
+# here and below: the default names, without a "New names:" line for each column.
+r6416   <- read_excel(f_6416, sheet = "Data1", col_names = FALSE, .name_repair = "unique_quiet")
 ser_ids <- as.character(unlist(r6416[10, 2:6]))
 hist_wide <- r6416[11:nrow(r6416), 1:6]; names(hist_wide) <- c("date", unname(IDMAP_6416[ser_ids]))
 rppi_hist <- hist_wide |>
@@ -114,7 +120,7 @@ D2_IDS <- c(inv_credit_nat = "DLCACIHN",
             oo_credit_nat  = "DLCACOHN",
             net_switch_nat = "DLCANS")
 
-d2_raw <- read_excel(f_d2, sheet = "Data", col_names = FALSE)
+d2_raw <- read_excel(f_d2, sheet = "Data", col_names = FALSE, .name_repair = "unique_quiet")
 d2_ids <- as.character(unlist(d2_raw[11, ]))          # row 11 = Series ID row
 d2_idx <- match(D2_IDS, d2_ids)
 stopifnot(!anyNA(d2_idx))                             # fail if IDs move/disappear
@@ -268,8 +274,10 @@ message("Existing panel: ", format(min(panel0$quarter)), " to ",
         format(max(panel0$quarter)), " (", nrow(panel0), " rows)")
 
 # Swap reconstructed price in for the old prop_price (full-sample piece).
+# Drop labor_income and prop_price_8cities: no source extends them past 2024 Q3,
+# so they would be NA from 2024 Q4, and no estimation script uses them.
 price_new <- price |> rename(prop_price_new = prop_price)
-panel <- panel0 |> select(-prop_price) |>
+panel <- panel0 |> select(-prop_price, -labor_income, -prop_price_8cities) |>
   left_join(price_new, by = c("city","quarter")) |> rename(prop_price = prop_price_new)
 
 # Generic header-parsed ABS picker (for 3101.0, 8752.0 wide workbooks).
@@ -288,7 +296,8 @@ pick_by_header <- function(raw_df, header_row, match_metric, value_origin = TRUE
 }
 
 # Migration (replace mis-dated columns with correctly-dated 3101.0).
-pop_raw <- read_excel(file.path(RAW, "310102.xlsx"), sheet = "Data1", col_names = FALSE)
+pop_raw <- read_excel(file.path(RAW, "310102.xlsx"), sheet = "Data1", col_names = FALSE,
+                      .name_repair = "unique_quiet")
 nom_new <- pick_by_header(pop_raw, 1, "Net Overseas Migration")   |> rename(net_overseas_new = val)
 nis_new <- pick_by_header(pop_raw, 1, "Net Interstate Migration") |> rename(net_interstate_new = val)
 mig_new <- full_join(nom_new, nis_new, by = c("city","quarter")) |>
@@ -304,7 +313,8 @@ panel <- panel |> left_join(mig_new, by = c("city","quarter")) |>
 panel <- panel |> left_join(nom_visa, by = c("city","quarter"))
 
 # Dwelling completions (replace mis-dated columns with 8752.0 Table 39).
-dw_raw <- read_excel(file.path(RAW, "87520039.xlsx"), sheet = "Data1", col_names = FALSE)
+dw_raw <- read_excel(file.path(RAW, "87520039.xlsx"), sheet = "Data1", col_names = FALSE,
+                     .name_repair = "unique_quiet")
 dw_hdr <- as.character(unlist(dw_raw[1, ]))
 dw_pick <- function(sector) {
   cols <- which(grepl(sector, dw_hdr, fixed = TRUE) &
@@ -328,6 +338,19 @@ panel <- panel |> left_join(dwell_new, by = c("city","quarter")) |>
          dwell_private = coalesce(dwell_private_new, dwell_private),
          dwell_public = coalesce(dwell_public_new, dwell_public)) |>
   select(-dwell_total_new, -dwell_private_new, -dwell_public_new)
+
+# Wage price index (replace with 6345.0 by date). In panel_main.csv, wpi at
+# quarter t holds the 6345.0 value for t+1, in all five cities from 2006 Q3 to
+# 2024 Q3, so dl_wpi was next quarter's wage growth and real_rent was shifted.
+# The tail in C now chains from the right 2024 Q3 level; before, it chained
+# 2024 Q4 growth onto a level that already held 2024 Q4, counting it twice.
+wpi_new <- purrr::imap_dfr(c(Sydney = 2, Melbourne = 3, Brisbane = 4, Adelaide = 5, Perth = 6),
+  function(col, city) read_abs_xlsx_col(file.path(RAW, "634502b.xlsx"), "Data1", col) |>
+    to_quarterly() |> mutate(city = city)) |>
+  rename(wpi_new = value)
+panel <- panel |> left_join(wpi_new, by = c("city", "quarter"))
+stopifnot(!anyNA(panel$wpi_new))   # every panel quarter takes its own 6345.0 value
+panel <- panel |> mutate(wpi = wpi_new) |> select(-wpi_new)
 
 # Investor lending (NEW column for the price equation; LEND_HOUSING, built in A3).
 panel <- panel |> left_join(inv_commit, by = c("city","quarter"))
@@ -416,13 +439,18 @@ ext <- ext |>
   left_join(gfcf_tail(gfcf_priv_src, "gfcf_private"), by = c("city","quarter")) |> rename(gfcf_private = value) |>
   left_join(gfcf_tail(gfcf_pub_src,  "gfcf_public"),  by = c("city","quarter")) |> rename(gfcf_public = value)
 
-# (labor_income reconstruction intentionally dropped: near-collinear with
-#  wpi*employment and used by no estimation script. See optimization note #8.)
+# (labor_income is not extended and is dropped in section B: it is near-
+#  collinear with wpi*employment and used by no estimation script. See
+#  optimization note #8.)
 
 # =============================================================================
 # D. STITCH, DERIVE, WRITE
 # =============================================================================
 panel_combined <- bind_rows(panel, ext) |> arrange(city, quarter) |>
+  # The tail rows carry no identifiers: fill state, set year and qtr everywhere.
+  group_by(city) |> tidyr::fill(state, .direction = "down") |> ungroup() |>
+  mutate(year = as.integer(format(quarter, "%Y")),
+         qtr  = as.integer(format(quarter, "%q"))) |>
   left_join(d2_credit, by = "quarter") |>   # national D2 credit, broadcast across cities
   group_by(city) |>
   mutate(
@@ -454,10 +482,7 @@ for (v in vars) {
 }
 
 saveRDS(panel_combined, file.path(CLEAN, "panel_combined.rds"))
-panel_csv <- panel_combined |>
-  mutate(year = as.integer(floor(as.numeric(quarter))),
-         qtr  = as.integer(round((as.numeric(quarter) - year) * 4) + 1),
-         quarter = format(quarter))
+panel_csv <- panel_combined |> mutate(quarter = format(quarter))   # year, qtr set in D
 write_csv(panel_csv, file.path(CLEAN, "panel_combined.csv"))
 write_csv(panel_csv, file.path(OUTDIR, "panel_combined.csv"))   # single source of truth
 message("Wrote panel_combined.{rds,csv} (", nrow(panel_combined), " rows).")
@@ -485,3 +510,5 @@ if (isTRUE(getOption("BUILD_DIAGNOSTICS", FALSE))) {
          width = 9, height = 5, dpi = 150)
   message("Wrote price-panel diagnostics to ", OUTDIR, "/")
 }
+
+end_run_log()

@@ -18,7 +18,7 @@
 
 RAW <- "raw"
 
-# --- The canonical input set the pipeline reads (13 files) -------------------
+# --- The canonical input set the pipeline reads (14 files) -------------------
 # Mirrors raw/README.md. Update here AND there if the inputs change.
 expected <- c(
   # numbered ABS xlsx workbooks

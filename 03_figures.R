@@ -7,8 +7,19 @@
 #         and (via figure1_transmission.R) the transmission diagram.
 # =============================================================================
 
+# Log this run in run_logs/ (see 00_run_log.R); the last line closes the log.
+source("00_run_log.R")
+start_run_log("03_figures")
+
 source("00_setup.R")
 library(ggplot2); library(plm); library(lmtest); library(sandwich)
+# Namespace protection (avoid MASS/stats masking dplyr verbs)
+select    <- dplyr::select;    filter    <- dplyr::filter
+mutate    <- dplyr::mutate;    slice     <- dplyr::slice
+recode    <- dplyr::recode;    rename    <- dplyr::rename
+summarise <- dplyr::summarise; summarize <- dplyr::summarize
+arrange   <- dplyr::arrange;   count     <- dplyr::count
+lag       <- dplyr::lag
 
 theme_set(theme_minimal(base_size = 11) +
             theme(panel.grid.minor = element_blank(), legend.title = element_blank(),
@@ -205,3 +216,5 @@ if (file.exists("figure1_transmission.R")) {
 } else {
   message("figure1_transmission.R not found; skipping the transmission diagram.")
 }
+
+end_run_log()

@@ -64,9 +64,11 @@ SHARE_BAND <- c(-0.05, 1.05)   # plausible share range; outside this set NA
 # date. These three helpers replace ~8 copy-pasted read/clean/chain blocks.
 
 # Read one numeric column of an ABS xlsx by position; return tibble(date, value)
-# with the Excel serial date parsed and NA rows dropped.
+# with the Excel serial date parsed and NA rows dropped. "unique_quiet" gives the
+# default names (...1, ...2) without printing a "New names:" line for each.
 read_abs_xlsx_col <- function(path, sheet, col, first_data_row = 11) {
-  ws <- readxl::read_excel(path, sheet = sheet, col_names = FALSE)
+  ws <- readxl::read_excel(path, sheet = sheet, col_names = FALSE,
+                           .name_repair = "unique_quiet")
   tibble::tibble(date  = ws[[1]],
                  value = suppressWarnings(as.numeric(ws[[col]]))) |>
     dplyr::slice(first_data_row:dplyr::n()) |>

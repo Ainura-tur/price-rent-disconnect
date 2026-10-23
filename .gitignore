@@ -1,10 +1,8 @@
-# --- targets cache -----------------------------------------------------------
-_targets/
-
 # --- regenerated artefacts (rebuilt by the pipeline; do not commit) ----------
 clean/
 output/
 logs/
+run_logs/
 
 # --- R session cruft ---------------------------------------------------------
 .Rhistory
@@ -31,7 +29,7 @@ manuscript/*.fdb_latexmk
 
 # --- raw data ----------------------------------------------------------------
 # All three sources permit reproduction WITH attribution (see raw/README.md),
-# so the THIRTEEN pipeline inputs are committed. The files below may sit in a
+# so the FOURTEEN pipeline inputs are committed. The files below may sit in a
 # working raw/ folder but are NOT pipeline inputs (superseded or stray exports);
 # they are excluded so they are never committed by accident. See the
 # "Files deliberately NOT committed" section of raw/README.md.
