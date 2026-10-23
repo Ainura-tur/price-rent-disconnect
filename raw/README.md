@@ -6,9 +6,11 @@ reproduction **with attribution**, so the files are committed to this repository
 under their respective terms. They are *not* covered by the repository's MIT code
 licence — each file retains the licence of its source.
 
-Only `01_build_panel.R` reads `raw/`. The three modern-API filenames are
-centralised in `00_setup.R` as `F_LEND`, `F_OMAD`, `F_D2`, since the long
-DSD-encoded names are the volatile part on a data refresh.
+Two steps read `raw/`: `01_build_panel.R` reads every file, and
+`01a_build_test_panel.R` reads the investor-lending file again for its
+seasonally adjusted series. The three modern-API filenames are centralised in
+`00_setup.R` as `F_LEND`, `F_OMAD`, `F_D2`, since the long DSD-encoded names
+are the volatile part on a data refresh.
 
 ## Attribution (required if you reproduce these data)
 
@@ -40,7 +42,7 @@ DSD-encoded names are the volatile part on a data refresh.
 | `6401010.xlsx` | ABS | 6401.0 Consumer Price Index — rents, per-city | CC BY 4.0 |
 | `634502b.xlsx` | ABS | 6345.0 Wage Price Index | CC BY 4.0 |
 | `62020010.xlsx` | ABS | 6202.0 Labour Force — employment, by state | CC BY 4.0 |
-| `ABS_LEND_HOUSING_1_1_..._AUS_Q.csv` (`F_LEND`) | ABS | Lending Indicators `LEND_HOUSING` 1.1 — investor housing new-loan commitments, by state (5601.0 successor) | CC BY 4.0 |
+| `ABS_LEND_HOUSING_1_1_..._AUS_Q.csv` (`F_LEND`) | ABS | Lending Indicators `LEND_HOUSING` 1.1 — new housing loan commitments by state, investor and owner-occupier, original and seasonally adjusted (5601.0 successor) | CC BY 4.0 |
 | `ABS_OMAD_VISA_..._AUS_Q.csv` (`F_OMAD`) | ABS | Overseas Migration `OMAD_VISA` — NOM by visa-and-citizenship group, by state | CC BY 4.0 |
 | `ABS_ANA_SFD_1_0_0_C_FCE_RDSH__..._Q.csv` | ABS | State Final Demand — household final consumption, housing services | CC BY 4.0 |
 | `ABS_ANA_SFD_1_0_0_C_GFC_PSS_GSS_..._Q.csv` | ABS | State Final Demand — gross fixed capital formation (Private / Public) | CC BY 4.0 |
@@ -106,13 +108,12 @@ already have clean names and are not renamed.
 
 On any refresh: edit `TARGET_END` and, if filenames changed, `F_LEND`/`F_OMAD`/
 `F_D2` in `00_setup.R`; update the hand-typed `cash_path` in `01_build_panel.R`;
-then `targets::tar_make()` (or `Rscript run_all.R`). See "Refreshing data next
-quarter" in `STRUCTURE.md`.
+then `Rscript run_all.R`. See "Refreshing data next quarter" in `STRUCTURE.md`.
 
 ## Provisional values
 
-- **2025Q4 `net_overseas`** is unpublished on every NOM-concept source to date;
-  the panel's final quarter carries a chained/forecast value. Closed only by the
-  next ABS quarterly NOM release.
+- **Net migration for 2025 Q4** is not yet published, so the panel leaves it
+  missing. Net migration and tightness end in 2025 Q3, one quarter before the
+  other series.
 - **OMAD visa shares** end one quarter before the panel and are `NA` across the
   2020–21 border-closure window by construction.

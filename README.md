@@ -4,64 +4,90 @@ Replication package for the paper *Credit, Fundamentals, and the Price–Rent
 Disconnect in Australian Housing Markets: Evidence from Five Capital Cities,
 2006–2025*.
 
-The study estimates two reduced-form equations on the within-city time dimension
-for Australia's five largest capital-city markets — a rent equation driven by
-local fundamentals (a migration-to-completions tightness measure, real wages,
-employment) and a price equation driven increasingly by investor credit and the
-cost of capital — and characterises the post-2017 divergence between the two.
+The paper estimates two reduced-form equations on variation within each of
+Australia's five largest capital cities over time. Rents track local
+fundamentals: market tightness (net migration relative to dwelling
+completions), wage growth and employment growth. Investor credit moves closely
+with prices and hardly at all with rents, before and after 2017, and the link
+does not strengthen significantly after 2017. Panel local projections show that
+prices respond to a credit innovation first and rents follow slowly.
+Instrumenting credit with the prudential regulator's 2015–2018 limits on
+investor lending supports the delay in rents.
 
 ## Quick start
 
-The pipeline reads raw data from `raw/`, builds an analysis panel, estimates the
-equations, and writes tables and figures to `output/`. Two equivalent ways to
-run it:
+From the repository root:
 
-```r
-# Dependency-tracked (reruns only what changed) — recommended
-install.packages("targets")   # once
-targets::tar_make()
-
-# or linear (runs every stage, every time)
-# Rscript run_all.R
+```
+Rscript run_all.R             # every step, 01 to 03f
+Rscript run_all.R 02c 02d     # only these steps
 ```
 
-Both source `00_setup.R` and run the same four stages. See
-[`PIPELINE_README.md`](PIPELINE_README.md) for the full method and
-[`STRUCTURE.md`](STRUCTURE.md) for the file map and stage dependencies.
+When a run includes step 01 or 01a, `run_all.R` first runs `verify_raw.R`,
+which checks that `raw/` holds the 14 input files under their expected names.
+It then runs each step in its own R session, in the order below, and skips a
+step whose input step failed. Every
+script writes a log to `run_logs/`, and `run_logs/run_history.csv` gets one row
+per run. In RStudio, source `run_all.R`; to run a subset there, set `RUN` near
+the top of the file.
 
-Before a first run, check the inputs are present and correctly named:
+ABS Data Explorer downloads need renaming before a first run; see
+[`raw/README.md`](raw/README.md). To check `raw/` on its own, run
+`Rscript verify_raw.R`.
 
-```r
-# Rscript verify_raw.R    # read-only; lists any missing or mis-named raw files
-```
+## Steps
 
-`run_all.R` runs this check automatically as a pre-flight; the `targets`
-pipeline hard-stops with the same diagnosis if an input is absent. ABS Data
-Explorer downloads need renaming to underscore form — see
-[`raw/README.md`](raw/README.md).
+| Step | Script | Needs | Main outputs |
+|------|--------|-------|--------------|
+| 01 | `01_build_panel.R` | `raw/` | `clean/panel_combined`, the analysis panel |
+| 01a | `01a_build_test_panel.R` | 01 | `clean/panel_tests`: adjusted and original investor credit, the investor share, indicators of the APRA measures, lags and sample flags |
+| 02 | `02_estimate.R` | 01 | the rent equation (Table 3), split-sample and rolling-window checks, and robustness checks in Appendix C |
+| 02a | `02a_migration_granularity.R` | 01 | checks that split migration by type (not reported in the paper) |
+| 02b | `02b_break_predictive_tests.R` | 01a | break tests, Granger tests and stacked price–rent tests |
+| 02c | `02c_main_tables_sa.R` | 01a | Tables 2, 4 and 5, and the Appendix C checks on adjusted credit |
+| 02d | `02d_unit_root_tests.R` | 01a | the unit-root tests (Table 8, Appendix C) |
+| 03 | `03_figures.R` | 02 | figures and local projections of the earlier version, on the original credit series |
+| 03b | `03b_local_projections.R` | 01a | local projections on adjusted credit (Figure 5) |
+| 03c | `03c_lp_iv_apra.R` | 01a | local projections instrumented with the APRA measures (Figure 6) |
+| 03d | `03d_cr_test_apra.R` | 01a | the correlation-restriction test of the APRA instruments |
+| 03e | `03e_cr_table_figure.R` | 03c, 03d | Table 6 and Figure 7 |
+| 03f | `03f_descriptive_figures.R` | 01a | Figures 2, 3, 4 and 8 |
+
+Table and figure numbers refer to the October 2026 revision of the paper.
+`03f` runs after `03` because both write Figures 2, 3, 4 and 8 under the same
+file names, and the paper uses the versions from `03f`. Figure 1 is drawn in
+TikZ in the manuscript.
+
+Step 03d needs the routines in `lib/ivcrtest`. Its first run takes up to a few
+hours. It caches its results in `output/cr_cache/`, so later runs take seconds.
+
+See [`PIPELINE_README.md`](PIPELINE_README.md) for the methods and checks, and
+[`STRUCTURE.md`](STRUCTURE.md) for the file map and the dependencies between
+steps.
 
 ## Requirements
 
-R (≥ 4.1) with: `dplyr`, `tidyr`, `readr`, `readxl`, `zoo`, `purrr`, `plm`,
-`lmtest`, `sandwich`, `fixest`, `splines`, `ggplot2`, and (for the dependency
-graph) `targets`.
+R 4.1 or later, with `dplyr`, `tidyr`, `readr`, `readxl`, `zoo`, `purrr`,
+`tibble`, `plm`, `lmtest`, `sandwich`, `fixest` and `ggplot2`. A few checks in
+`02_estimate.R` and `02a_migration_granularity.R` also use `car`,
+`fwildclusterboot` (with `dqrng`) and `pco`. Without them, those checks are
+skipped or computed another way, and the log says so. Step 03d also needs
+`MASS` and `Matrix`, which come with R.
 
 ## Layout
 
 ```
-00_setup.R                     shared constants, paths, helpers, Driscoll–Kraay SE
-01_build_panel.R               STAGE 1  panel construction
-02_estimate.R                  STAGE 2  rent/price equations, divergence, IV
-02a_migration_granularity.R    STAGE 2a migration-disaggregation robustness
-03_figures.R                   STAGE 3  figures, local projections
-run_all.R   / _targets.R       two entry points (see Quick start)
-verify_raw.R                   pre-run check that raw/ holds the expected inputs
-R/functions.R                  stage wrappers for the targets pipeline
-plot_migration_composition.R   standalone diagnostic (not in the master run)
-check_integration_plots.R      standalone diagnostic (not in the master run)
-manuscript/                    LaTeX source and compiled PDF (Figure 1 is native TikZ)
-raw/                           input data — see raw/README.md for sources & licences
-clean/  output/  logs/         regenerated by the pipeline (git-ignored)
+run_all.R                      runs the pipeline (see Quick start)
+verify_raw.R                   checks that raw/ holds the expected inputs
+00_setup.R                     shared constants, paths, helpers, Driscoll–Kraay errors
+00_run_log.R                   writes a log of every run to run_logs/
+01_build_panel.R ... 03f_descriptive_figures.R    the 13 steps above
+lib/ivcrtest/                  correlation-restriction test routines, used by 03d
+plot_migration_composition.R   standalone diagnostic (not run by run_all.R)
+check_integration_plots.R      standalone diagnostic (not run by run_all.R)
+manuscript/                    LaTeX source and PDF of the June 2026 version
+raw/                           input data; see raw/README.md for sources and licences
+clean/  output/  run_logs/     written by the pipeline (git-ignored)
 ```
 
 ## Data
