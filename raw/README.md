@@ -49,6 +49,17 @@ are the volatile part on a data refresh.
 | `d02hist.xlsx` (`F_D2`) | RBA | Statistical Table D2 — Lending and Credit Aggregates (investor `DLCACIHN`, owner-occupier `DLCACOHN`, net switching `DLCANS`) | RBA Financial Data terms |
 | `bis_dp_search_export_20260615-045639.csv` | BIS | Residential Property Prices — Australia (Sydney series), BIS Data Portal export | BIS terms of permitted use |
 | `panel_main.csv` | own construction | base paper panel into which reconstructed series are swapped | this repository (MIT) |
+| `f01hist.xlsx` (`F_F11`), optional | RBA | Statistical Table F1.1 — Interest Rates and Yields, Money Market, Monthly (cash rate target, monthly average, `FIRMMCRT`) | RBA Financial Data terms |
+
+`f01hist.xlsx` is optional. When it is present, `01_build_panel.R` takes every
+quarter's cash rate from it: the mean of the three monthly averages of the cash
+rate target, each rounded to two decimals as the table shows them. Built this
+way, it reproduces the cash rate in `panel_main.csv` in all 73 quarters from
+2006 Q3 to 2024 Q3. Without it, as for the June 2026 inputs, the history comes
+from `panel_main.csv` and 2024 Q4 to 2025 Q4 from a hand-typed path, so the
+June 2026 results reproduce. That path holds end-of-quarter targets for 2025
+Q1–Q3, where F1.1 gives quarterly averages; the difference moves no estimate
+in `02b` or `02c` by more than 0.001.
 
 ## Files deliberately NOT committed
 
@@ -60,8 +71,9 @@ not mistake their absence for a missing dependency:
   (all visa groups). Superseded by the specific-group export `F_OMAD`
   (`ABS_OMAD_VISA___11_12_..._AUS_Q.csv`), which is the only OMAD file the code
   reads. Not used.
-- `f01dhist.xls` — RBA Statistical Table F1 (interest rates). Referenced by no
-  script; not part of this pipeline.
+- `f01dhist.xls` — RBA Statistical Table F1, the daily interest-rate table.
+  Referenced by no script; the pipeline reads the monthly table F1.1
+  (`f01hist.xlsx`) instead.
 - `560114.xlsx` — legacy ABS 5601.0 Table 14 investor lending. Superseded by the
   Lending Indicators successor `F_LEND`; appears only in an explanatory comment
   in `01_build_panel.R`, never read.
@@ -98,17 +110,20 @@ already have clean names and are not renamed.
 - **ABS** — via the ABS Data Explorer / data API (the `ABS_*` CSVs) or Time
   Series workbooks (the numbered `.xlsx`). Dataflow IDs are embedded in the
   filenames; `00_setup.R` documents the per-city column maps used by the readers.
-- **RBA D2** — download the current D2 workbook from the
+- **RBA D2 and F1.1** — download the current D2 workbook and table F1.1
+  (`f01hist.xlsx`) from the
   [RBA statistical tables](https://www.rba.gov.au/statistics/tables/); the series
-  IDs above are stable across releases.
+  IDs above are stable across releases. F1.1 must hold all three months of every
+  quarter to `TARGET_END`, or step 01 stops and says which quarter is short.
 - **BIS** — re-export the Australia residential property price series from the
   [BIS Data Portal](https://data.bis.org/); the committed file is a dated search
   export (15 June 2026). The `00_setup.R` filename constant isolates this path,
   so a fresh export can be dropped in and the pipeline rerun.
 
 On any refresh: edit `TARGET_END` and, if filenames changed, `F_LEND`/`F_OMAD`/
-`F_D2` in `00_setup.R`; update the hand-typed `cash_path` in `01_build_panel.R`;
-then `Rscript run_all.R`. See "Refreshing data next quarter" in `STRUCTURE.md`.
+`F_D2` in `00_setup.R`; put the latest `f01hist.xlsx` in the raw-data folder, so
+the cash rate needs no hand-typing; then `Rscript run_all.R`. See "Refreshing
+data next quarter" in `STRUCTURE.md`.
 
 ## Provisional values
 

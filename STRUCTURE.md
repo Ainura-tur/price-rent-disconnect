@@ -28,15 +28,15 @@ project-root/
 ├── 01a_build_test_panel.R         01a  adjusted credit, investor share, lags, sample flags
 ├── 02_estimate.R                  02   rent equation, divergence, robustness, mechanism checks
 ├── 02a_migration_granularity.R    02a  migration split by type (not reported in the paper)
-├── 02b_break_predictive_tests.R   02b  break, Granger and stacked price-rent tests
+├── 02b_break_predictive_tests.R   02b  break, Granger and stacked tests (Tables 6 and 7)
 ├── 02c_main_tables_sa.R           02c  Tables 2, 4 and 5; Appendix C checks
-├── 02d_unit_root_tests.R          02d  unit-root table (Table 8)
+├── 02d_unit_root_tests.R          02d  unit-root table (Table C.1)
 ├── 03_figures.R                   03   earlier figures and local projections
 ├── 03b_local_projections.R        03b  local projections, adjusted credit (Figure 5)
 ├── 03c_lp_iv_apra.R               03c  instrumented local projections (Figure 6)
 ├── 03d_cr_test_apra.R             03d  correlation-restriction test of the instruments
-├── 03e_cr_table_figure.R          03e  Table 6 and Figure 7
-├── 03f_descriptive_figures.R      03f  Figures 2, 3, 4 and 8
+├── 03e_cr_table_figure.R          03e  Table 8 and Figure 7
+├── 03f_descriptive_figures.R      03f  Figures 2, 3, 4 and C.1
 │
 ├── lib/ivcrtest/                  routines of the correlation-restriction test, read by 03d
 │
@@ -90,13 +90,15 @@ The two diagnostics source `00_setup.R` when it is present (for `OUTDIR`,
 | `ABS_OMAD_VISA_..._AUS_Q.csv` (`F_OMAD`) | net overseas migration by visa and citizenship group, by state | 01 |
 | `d02hist.xlsx` (`F_D2`) | RBA D2 national housing credit (investor and owner-occupier stock, switching flow) | 01 |
 | `panel_main.csv` | the earlier paper panel, into which 01 swaps the rebuilt series | 01 |
+| `f01hist.xlsx` (`F_F11`), optional | RBA table F1.1, monthly money-market rates: the cash rate target. When present, 01 takes every quarter's cash rate from it; without it, the June 2026 path | 01 |
 
 `00_setup.R` holds the three modern-API filenames as `F_LEND`, `F_OMAD` and
-`F_D2`, because their long names are the part that changes on a refresh.
+`F_D2`, because their long names are the part that changes on a refresh, and
+the optional RBA F1.1 file as `F_F11`.
 
 > **Not committed.** Three files may sit in a working `raw/` folder, but no
 > script reads them, so the repository leaves them out: `560114.xlsx` (legacy
-> 5601.0 lending, replaced by `F_LEND`), `f01dhist.xls` (RBA F1 interest rates)
+> 5601.0 lending, replaced by `F_LEND`), `f01dhist.xls` (RBA F1, the daily interest-rate table)
 > and the all-groups OMAD export `ABS_OMAD_VISA,+..._AUS.Q.csv` (replaced by
 > `F_OMAD`). See "Files deliberately NOT committed" in `raw/README.md`. The
 > committed input set is 14 files.
@@ -178,6 +180,8 @@ granular_price_placebo_alone.txt     price placebo, on its own
 tests_break_dated.csv   tests_break_sup.csv   tests_break_path.csv
 tests_granger.csv       tests_granger_dh.csv  tests_stacked.csv
 tests_summary.txt
+table_break_tests.tex   Table 6
+table_granger.tex       Table 7
 ```
 
 ### 02c: main tables on adjusted credit
@@ -193,7 +197,7 @@ main_tables_summary.txt   the numbers quoted in the text
 ### 02d: unit-root tests
 
 ```
-table_unit_root.tex       Table 8
+table_unit_root.tex       Table C.1
 unit_root_tests.csv       panel statistics
 unit_root_by_city.csv     city ADF tests
 ```
@@ -237,10 +241,10 @@ cr_cache/                     one result per specification
 03d reuses a cached result while the data, settings and `lib/ivcrtest` code
 behind it are unchanged.
 
-### 03e: Table 6 and Figure 7
+### 03e: Table 8 and Figure 7
 
 ```
-table_cr_apra.tex             Table 6
+table_cr_apra.tex             Table 8
 fig_cr_valid_range.pdf        Figure 7
 fig_cr_valid_range.png
 ```
@@ -251,11 +255,11 @@ fig_cr_valid_range.png
 fig_rental_trajectories.png   Figure 2
 fig_price_rent_gap.png        Figure 3
 fig_real_rent.png             Figure 4
-fig_divergence.png            Figure 8
+fig_divergence.png            Figure C.1
 rolling_partial_r2.csv        descriptive_figures_summary.txt
 ```
 
-Figure 1 is TikZ in the `.tex`, and Table 7 lists the data sources. No script
+Figure 1 is TikZ in the `.tex`, and Table B.1 lists the data sources. No script
 in the pipeline produces Table 1, the cross-city summary statistics.
 
 ### Standalone diagnostics (run by hand)
@@ -325,11 +329,16 @@ skipped.
 ## Refreshing data next quarter
 
 1. Edit `TARGET_END` in `00_setup.R`.
-2. Put the new files in `raw/`. If the API filenames changed, update `F_LEND`,
-   `F_OMAD` or `F_D2` in `00_setup.R`, and `F_LEND` in section 0 of
-   `01a_build_test_panel.R` (used only when `00_setup.R` is absent).
-3. Update the hand-typed `cash_path` in `01_build_panel.R`. A check stops the
-   run if it does not reach `TARGET_END`.
+2. Put the new files in `raw/`, or in a folder of their own such as
+   `raw_rev/refresh`, and set `RAW` in `00_setup.R` to that folder;
+   `verify_raw.R` checks the folder `RAW` names. If the API filenames changed,
+   update `F_LEND`, `F_OMAD` or `F_D2` in `00_setup.R`, and `F_LEND` in
+   section 0 of `01a_build_test_panel.R` (used only when `00_setup.R` is absent).
+3. Put the latest `f01hist.xlsx` (RBA table F1.1) in the same folder. Step 01
+   takes the cash rate from it, after checking that it reproduces the history
+   in `panel_main.csv`, and stops if it lacks a full quarter up to `TARGET_END`.
+   Without the file, 01 uses the hand-typed path of the June 2026 run, which
+   ends in 2025 Q4.
 4. Check the per-city column maps for the xlsx tails; `assert_tail_ok()` flags
    a layout change.
 5. Run `Rscript run_all.R`. The coverage report of step 01 prints the last

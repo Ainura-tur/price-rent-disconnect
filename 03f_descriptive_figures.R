@@ -1,18 +1,19 @@
 # =============================================================================
-# 03f_descriptive_figures.R  --  Figures 2, 3, 4 and 8, redrawn without titles
+# 03f_descriptive_figures.R  --  Figures 2, 3, 4 and C.1, redrawn without titles
 #
 # 03_figures.R drew these four figures with a title and a working subtitle
 # inside each image. Elsevier's guides put the title in the caption, so the
 # redrawn figures carry none, and their axis labels use the paper's terms:
-#   fig_rental_trajectories.png  Figure 2  rent index by city
-#   fig_price_rent_gap.png       Figure 3  price-rent ratio by city
-#   fig_real_rent.png            Figure 4  rent index over the wage price index
-#   fig_divergence.png           Figure 8  rolling partial R-squared of investor
-#                                          credit, price and rent equations
+#   fig_rental_trajectories.png  Figure 2    rent index by city
+#   fig_price_rent_gap.png       Figure 3    price-rent ratio by city
+#   fig_real_rent.png            Figure 4    rent index over the wage price index
+#   fig_divergence.png           Figure C.1  rolling partial R-squared of
+#                                            investor credit, price and rent
+#                                            equations (Appendix C)
 # The file names match the \includegraphics calls in Rental_disconnect.tex, so
 # copying the four PNGs into the paper folder replaces the old figures.
 #
-# Figure 8 now uses seasonally adjusted investor credit, the paper's main
+# Figure C.1 now uses seasonally adjusted investor credit, the paper's main
 # measure; 03_figures.R used the original series. The statistic is otherwise
 # that of 02_estimate.R, section 6: in each 20-quarter window, the rise in R^2
 # when credit growth joins a within-city regression of price (or rent) growth
@@ -28,7 +29,7 @@
 #
 # Writes to output/:
 #   the four PNGs above (8 x 4.5 inches, 300 dpi, as Figure 5)
-#   rolling_partial_r2.csv           Figure 8 values, both credit series
+#   rolling_partial_r2.csv           Figure C.1 values, both credit series
 #   descriptive_figures_summary.txt  end values and peaks, for checking the
 #                                    text against the figures
 # =============================================================================
@@ -55,9 +56,10 @@ dir.create(OUTDIR, showWarnings = FALSE)
 
 CITIES      <- c("Sydney", "Melbourne", "Brisbane", "Adelaide", "Perth")
 BREAK_Q     <- as.yearqtr("2017 Q1")     # dashed line in every figure
-WIN         <- 20                        # rolling window for Figure 8, quarters
+WIN         <- 20                        # rolling window for Figure C.1, quarters
 CREDIT      <- c(main = "dl_inv_sa", original = "dl_inv")
-FIG8_CREDIT <- "main"                    # the credit series Figure 8 plots
+FIG8_CREDIT <- "main"                    # the credit series Figure C.1 plots
+                                         # (named when it was Figure 8)
 CONTROLS    <- c("d_cash", "tight_l1", "dl_wpi")   # as in 02_estimate.R, section 6
 OUTCOMES    <- c("Price equation" = "dl_price", "Rent equation" = "dl_rent")
 FIG_W <- 8; FIG_H <- 4.5; FIG_DPI <- 300
@@ -99,7 +101,7 @@ tp <- tp |>
          rent_wage  = rents / wpi) |>
   arrange(city, quarter)
 
-# ---- Figure 8 statistic: rolling partial R-squared of investor credit -----------
+# ---- Figure C.1 statistic: rolling partial R-squared of investor credit ---------
 window_r2 <- function(w, y, x) {
   m1 <- lm(reformulate(c(x, CONTROLS, "city"), y), data = w)
   m0 <- lm(reformulate(c(CONTROLS, "city"), y), data = w)
@@ -148,7 +150,7 @@ tryCatch({
               .groups = "drop")
   print(as.data.frame(t1), digits = 3, row.names = FALSE)
 
-  cat("\n2. Figure 8: rolling partial R-squared of investor credit\n")
+  cat("\n2. Figure C.1: rolling partial R-squared of investor credit\n")
   t2 <- roll |>
     group_by(measure, equation) |>
     summarise(first_window_end = format(min(quarter_end)),
@@ -161,7 +163,7 @@ tryCatch({
               .groups = "drop")
   print(as.data.frame(t2), digits = 3, row.names = FALSE)
 
-  cat("\n3. Figure 8: windows in which the price equation's value exceeds the rent equation's\n")
+  cat("\n3. Figure C.1: windows in which the price equation's value exceeds the rent equation's\n")
   t3 <- roll |>
     select(quarter_end, measure, equation, partial_r2) |>
     pivot_wider(names_from = equation, values_from = partial_r2) |>
@@ -217,7 +219,7 @@ break_marker <- list(
   coord_cartesian(clip = "off"))
 
 # floor: the lowest position a label may take, so that a line ending on a
-# reference line (Figure 8's zero line) does not put its label on that line.
+# reference line (Figure C.1's zero line) does not put its label on that line.
 end_labels <- function(d, group, value, gap_share, floor = -Inf) {
   e <- d |> group_by(.data[[group]]) |> filter(t == max(t)) |> ungroup()
   e$y_lab <- spread_labels(pmax(e[[value]], floor),
@@ -257,7 +259,7 @@ p4 <- plot_cities("rent_wage", "Rent index / wage price index")
 ggsave(file.path(OUTDIR, "fig_real_rent.png"), p4,
        width = FIG_W, height = FIG_H, dpi = FIG_DPI, bg = "white")
 
-# Figure 8. Rolling partial R-squared of investor credit.
+# Figure C.1. Rolling partial R-squared of investor credit.
 d8 <- roll |>
   filter(measure == FIG8_CREDIT) |>
   mutate(t = as.numeric(quarter_end),

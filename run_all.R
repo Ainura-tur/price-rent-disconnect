@@ -14,24 +14,25 @@
 #   01a   01a_build_test_panel.R         01        clean/panel_tests
 #   02    02_estimate.R                  01        estimates and robustness checks
 #   02a   02a_migration_granularity.R    01        granular migration checks
-#   02b   02b_break_predictive_tests.R   01a       break and Granger tests
+#   02b   02b_break_predictive_tests.R   01a       Tables 6 and 7: break and Granger tests
 #   02c   02c_main_tables_sa.R           01a       Tables 2, 4 and 5; Appendix C checks
-#   02d   02d_unit_root_tests.R          01a       unit-root table
+#   02d   02d_unit_root_tests.R          01a       Table C.1: unit-root tests
 #   03    03_figures.R                   02        earlier figures, local projections
 #   03b   03b_local_projections.R        01a       local projections, adjusted credit
 #   03c   03c_lp_iv_apra.R               01a       instrumented local projections
 #   03d   03d_cr_test_apra.R             01a       CR test of the APRA instruments
-#   03e   03e_cr_table_figure.R          03c, 03d  Table 6 and Figure 7
-#   03f   03f_descriptive_figures.R      01a       Figures 2, 3, 4 and 8
+#   03e   03e_cr_table_figure.R          03c, 03d  Table 8 and Figure 7
+#   03f   03f_descriptive_figures.R      01a       Figures 2, 3, 4 and C.1
 #
 # 03f must run after 03_figures.R: both write fig_divergence.png and three
 # other figures under the same names, and the paper uses 03f's versions.
 # 03d needs lib/ivcrtest. With a matching cache in output/cr_cache/ it takes
 # seconds; without one, up to a few hours (see its header).
 #
-# Steps 01 and 01a read raw/. Before a run that includes either, verify_raw.R
-# checks that raw/ holds the 14 input files under their expected names, and
-# the run stops before any step starts if it finds a problem.
+# Steps 01 and 01a read the raw-data folder that RAW names in 00_setup.R (raw/,
+# or raw_rev/refresh for a data refresh). Before a run that includes either,
+# verify_raw.R checks that this folder holds the 14 input files under their
+# expected names, and the run stops before any step starts if it finds a problem.
 #
 # Logs. Each step writes its own log in run_logs/, with its full output. This
 # script writes run_logs/run_all_<date>_<time>.log with the step summary, and
@@ -124,13 +125,14 @@ cat("  Started:", now(), "| R:", R.version.string, "\n")
 cat("  Steps:  ", paste(PIPELINE$code[PIPELINE$code %in% RUN], collapse = " "), "\n")
 cat("=============================================================\n")
 
-# Pre-flight check of raw/. verify_raw.R ends with quit(), so it runs in its
-# own R session; a non-zero exit status stops the run here.
+# Pre-flight check of the raw-data folder (RAW in 00_setup.R). verify_raw.R
+# ends with quit(), so it runs in its own R session; a non-zero exit status
+# stops the run here.
 if (any(c("01", "01a") %in% RUN) && file.exists("verify_raw.R")) {
   cat("\n>>> PRE-FLIGHT: verify_raw.R\n")
   if (!identical(as.integer(system2(RSCRIPT, "verify_raw.R")), 0L))
-    stop("verify_raw.R found missing or misnamed files in raw/ (see above). ",
-         "Fix raw/ and run again.", call. = FALSE)
+    stop("verify_raw.R found missing or misnamed input files (see above). ",
+         "Fix them and run again.", call. = FALSE)
 }
 
 # One row per step: TRUE if it completed, FALSE if it failed or was skipped,

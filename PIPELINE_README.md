@@ -131,19 +131,20 @@ Beyond the merge:
      investor share, indicators of the APRA lending measures, lags and sample
      flags.
    - `02b_break_predictive_tests.R`: break tests at known and unknown dates,
-     Granger tests, and stacked tests of the price and rent slopes.
+     Granger tests, and stacked tests of the price and rent slopes (Tables 6
+     and 7).
    - `02c_main_tables_sa.R`: Tables 2, 4 and 5 and most Appendix C checks, on
      adjusted credit, with a wild cluster bootstrap over all 7,776 Webb draws.
    - `02d_unit_root_tests.R`: panel (Im-Pesaran-Shin) and city ADF tests of
-     every series the equations use (Table 8).
+     every series the equations use (Table C.1).
    - `03b_local_projections.R`: local projections on adjusted credit
      (Figure 5).
    - `03c_lp_iv_apra.R`: local projections instrumented with the APRA
      investor-lending benchmark and interest-only cap (Figure 6).
    - `03d_cr_test_apra.R`: the correlation-restriction test of those
      instruments, with routines from `lib/ivcrtest`.
-   - `03e_cr_table_figure.R`: Table 6 and Figure 7.
-   - `03f_descriptive_figures.R`: Figures 2, 3, 4 and 8.
+   - `03e_cr_table_figure.R`: Table 8 and Figure 7.
+   - `03f_descriptive_figures.R`: Figures 2, 3, 4 and C.1.
 3. **The wage series is dated correctly.** In `panel_main.csv`, the wage price
    index at each quarter held the 6345.0 value of the next quarter, so wage
    growth was one quarter ahead of rent growth. Step 01 now takes the index by
@@ -163,6 +164,18 @@ Beyond the merge:
    fallback judges each city's residual ADF statistic against the Engle-Granger
    5 percent critical value (about -3.42); the Pedroni critical values apply
    only after the group mean is standardised.
+
+7. **The cash rate from RBA table F1.1 (27 October 2026).** The panel's cash
+   rate is the mean of the RBA's monthly averages of the cash rate target, each
+   rounded to two decimals; built from F1.1 (`f01hist.xlsx`), it reproduces the
+   73 quarters in `panel_main.csv` from 2006 Q3 to 2024 Q3. When the file is in
+   the raw-data folder, step 01 takes every quarter from it and checks the
+   history first. Without it, 01 keeps the June 2026 path: the history from
+   `panel_main.csv` and a hand-typed tail for 2024 Q4 to 2025 Q4, which holds
+   end-of-quarter targets for 2025 Q1-Q3 (4.10, 3.85, 3.60) where F1.1 gives
+   quarterly averages (4.23, 3.99, 3.72). The difference moves no estimate in
+   `02b` or `02c` by more than 0.001. `verify_raw.R` now checks the folder that
+   `RAW` names in `00_setup.R` and reports `f01hist.xlsx` as an optional input.
 
 ## Mechanism and nonlinearity checks
 
@@ -240,10 +253,12 @@ reports.
 ## Refreshing data next quarter
 
 1. Edit `TARGET_END` in `00_setup.R`.
-2. Put the new files in `raw/`. If the API filenames changed, update `F_LEND`,
-   `F_OMAD` or `F_D2` in `00_setup.R`.
-3. Update the hand-typed `cash_path` in `01_build_panel.R`. A check stops the
-   run if it does not reach `TARGET_END`.
+2. Put the new files in `raw/`, or in a folder of their own such as
+   `raw_rev/refresh`, and set `RAW` in `00_setup.R` to that folder. If the API
+   filenames changed, update `F_LEND`, `F_OMAD` or `F_D2` in `00_setup.R`.
+3. Put the latest `f01hist.xlsx` (RBA table F1.1) in the same folder, so the
+   cash rate needs no hand-typing. Step 01 stops if the file lacks a full
+   quarter up to `TARGET_END`.
 4. Check the per-city column maps for the xlsx tails; `assert_tail_ok()` flags
    a layout change.
 5. Run `Rscript run_all.R`. The coverage report of step 01 prints the last

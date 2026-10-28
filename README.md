@@ -43,18 +43,18 @@ ABS Data Explorer downloads need renaming before a first run; see
 | 01a | `01a_build_test_panel.R` | 01 | `clean/panel_tests`: adjusted and original investor credit, the investor share, indicators of the APRA measures, lags and sample flags |
 | 02 | `02_estimate.R` | 01 | the rent equation (Table 3), split-sample and rolling-window checks, and robustness checks in Appendix C |
 | 02a | `02a_migration_granularity.R` | 01 | checks that split migration by type (not reported in the paper) |
-| 02b | `02b_break_predictive_tests.R` | 01a | break tests, Granger tests and stacked price–rent tests |
-| 02c | `02c_main_tables_sa.R` | 01a | Tables 2, 4 and 5, and the Appendix C checks on adjusted credit |
-| 02d | `02d_unit_root_tests.R` | 01a | the unit-root tests (Table 8, Appendix C) |
+| 02b | `02b_break_predictive_tests.R` | 01a | break tests and Granger tests (Tables 6 and 7), and stacked price–rent tests |
+| 02c | `02c_main_tables_sa.R` | 01a | Tables 2, 4 and 5, and the Appendix C checks on adjusted credit, including the cash-rate interaction |
+| 02d | `02d_unit_root_tests.R` | 01a | the unit-root tests (Table C.1) |
 | 03 | `03_figures.R` | 02 | figures and local projections of the earlier version, on the original credit series |
 | 03b | `03b_local_projections.R` | 01a | local projections on adjusted credit (Figure 5) |
 | 03c | `03c_lp_iv_apra.R` | 01a | local projections instrumented with the APRA measures (Figure 6) |
 | 03d | `03d_cr_test_apra.R` | 01a | the correlation-restriction test of the APRA instruments |
-| 03e | `03e_cr_table_figure.R` | 03c, 03d | Table 6 and Figure 7 |
-| 03f | `03f_descriptive_figures.R` | 01a | Figures 2, 3, 4 and 8 |
+| 03e | `03e_cr_table_figure.R` | 03c, 03d | Table 8 and Figure 7 |
+| 03f | `03f_descriptive_figures.R` | 01a | Figures 2, 3, 4 and C.1 |
 
 Table and figure numbers refer to the October 2026 revision of the paper.
-`03f` runs after `03` because both write Figures 2, 3, 4 and 8 under the same
+`03f` runs after `03` because both write Figures 2, 3, 4 and C.1 under the same
 file names, and the paper uses the versions from `03f`. Figure 1 is drawn in
 TikZ in the manuscript.
 
