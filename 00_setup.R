@@ -49,6 +49,7 @@ CITY_COLS <- c(Sydney="#c0392b", Melbourne="#2c3e50", Brisbane="#16a085",
 F_LEND <- file.path(RAW, "ABS_LEND_HOUSING_1_1_______10_20_1_2_3_4_5_6_7_8_AUS_Q.csv")   # investor lending (5601.0 successor)
 F_OMAD <- file.path(RAW, "ABS_OMAD_VISA___11_12_15_22_23_24_25_1009_1010_1020_1030_1040_1041_2203_2208_01_02_03_1_2_3_4_5_AUS_Q.csv")  # NOM by visa group
 F_D2   <- file.path(RAW, "d02hist.xlsx")                                                  # RBA D2 national housing credit
+F_F11  <- file.path(RAW, "f01hist.xlsx")   # RBA F1.1 money-market rates, monthly: the cash rate target (optional; see read_cash_f11)
 
 # Migration visa-share guards (used when forming nom_temp_share / nom_student_share
 # from 4q rolling sums). The raw quarterly ratio is unusable: total net NOM crosses
@@ -122,6 +123,33 @@ assert_tail_ok <- function(tail_df, n_cities, n_new_q, what) {
   if (any(!is.finite(tail_df$value)))
     warning(sprintf("%s tail contains non-finite values", what))
   invisible(tail_df)
+}
+
+# ---- RBA cash rate reader ---------------------------------------------------
+# Quarterly cash rate from RBA statistical table F1.1 (f01hist.xlsx): the mean
+# of the three monthly averages of the cash rate target (series FIRMMCRT) in
+# each quarter. The monthly values are rounded to two decimals, as the table
+# displays them; before 2013 the file stores spurious digits (7.249712 for a
+# 7.25 target). Built this way, the series reproduces the cash_rate column of
+# panel_main.csv in all 73 quarters from 2006 Q3 to 2024 Q3 (checked 27 October
+# 2026). Returns tibble(quarter, n_months, cash_rate); a quarter with fewer than
+# three months of data has n_months < 3.
+read_cash_f11 <- function(path) {
+  ws  <- readxl::read_excel(path, sheet = "Data", col_names = FALSE,
+                            .name_repair = "unique_quiet")
+  ids <- as.character(unlist(ws[11, ]))          # row 11 = Series ID
+  j   <- match("FIRMMCRT", ids)
+  if (is.na(j))
+    stop("read_cash_f11: no series FIRMMCRT (cash rate target) in row 11 of the ",
+         "Data sheet of ", path, ". Is this RBA table F1.1?")
+  tibble::tibble(date   = as.Date(as.numeric(unlist(ws[12:nrow(ws), 1])), origin = "1899-12-30"),
+                 target = suppressWarnings(as.numeric(unlist(ws[12:nrow(ws), j])))) |>
+    dplyr::filter(!is.na(date), !is.na(target)) |>
+    dplyr::mutate(quarter = zoo::as.yearqtr(date)) |>
+    dplyr::group_by(quarter) |>
+    dplyr::summarise(n_months = dplyr::n(), cash_rate = mean(round(target, 2)),
+                     .groups = "drop") |>
+    dplyr::arrange(quarter)
 }
 
 # ---- Estimation helper ------------------------------------------------------

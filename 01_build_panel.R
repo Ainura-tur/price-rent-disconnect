@@ -9,6 +9,8 @@
 #      that no source extends, attach investor lending.
 #   C. Extend every series to TARGET_END by growth-chaining recent ABS quarters
 #      onto the 2024Q3 level, build derived variables, write clean/panel_combined.
+#      The cash rate comes from RBA table F1.1 for every quarter when
+#      f01hist.xlsx is in RAW; otherwise from the June 2026 path (section C).
 #
 # The price reconstruction (A) is computed ONCE here and reused, rather than
 # being duplicated as it was across the old 01 and 03. The eight near-identical
@@ -389,10 +391,42 @@ emp_tail <- build_xlsx_tail(file.path(RAW,"62020010.xlsx"), "Data1",
 assert_tail_ok(emp_tail, length(CITIES), n_new, "employment")
 ext <- ext |> left_join(emp_tail, by = c("city","quarter")) |> rename(employment = value)
 
-# --- cash rate tail: national published path (assert it reaches TARGET_END) --
-cash_path <- tibble(
-  quarter = as.yearqtr(c("2024 Q4","2025 Q1","2025 Q2","2025 Q3","2025 Q4")),
-  cr = c(4.35, 4.10, 3.85, 3.60, 3.60))
+# --- cash rate: RBA table F1.1 when it is in RAW (added 27 October 2026) --------
+# With f01hist.xlsx in RAW, every quarter's cash rate comes from F1.1 (see
+# read_cash_f11 in 00_setup.R). It must first reproduce the history in
+# panel_main.csv to that column's four decimals; it then replaces the history
+# and fills the extension, so a data refresh needs no hand-typed rates.
+# Without the file, as in raw/ with the June 2026 inputs, the history stays as
+# in panel_main.csv and 2024 Q4-2025 Q4 take the hand-typed path of the June
+# 2026 run, so the paper's June results reproduce. That path holds end-of-quarter
+# targets for 2025 Q1-Q3 (4.10, 3.85, 3.60) where F1.1 gives quarterly averages
+# (4.23, 3.99, 3.72); the difference moves no estimate in 02b or 02c by more than
+# 0.001. Drop the fallback once the refreshed inputs, with f01hist.xlsx, replace raw/.
+if (file.exists(F_F11)) {
+  cash_q <- read_cash_f11(F_F11)
+  need_q <- sort(unique(c(panel$quarter, new_q)))
+  short  <- need_q[!need_q %in% cash_q$quarter[cash_q$n_months == 3]]
+  if (length(short))
+    stop("f01hist.xlsx lacks three months of cash-rate data for ",
+         paste(format(short), collapse = ", "), ". Download the latest RBA table F1.1, ",
+         "or set TARGET_END in 00_setup.R to the last complete quarter.")
+  hist_chk <- panel |> distinct(quarter, cash_rate) |>
+    left_join(cash_q, by = "quarter", suffix = c("_panel", "_f11")) |>
+    mutate(diff = abs(cash_rate_panel - cash_rate_f11))
+  if (anyNA(hist_chk$diff) || max(hist_chk$diff) > 5e-5)
+    stop("F1.1 does not reproduce the cash_rate history in panel_main.csv: the largest ",
+         "difference is ", signif(max(hist_chk$diff, na.rm = TRUE), 3), ".")
+  panel <- panel |> mutate(cash_rate = cash_q$cash_rate[match(quarter, cash_q$quarter)])
+  cash_path <- cash_q |> filter(quarter %in% new_q) |> transmute(quarter, cr = cash_rate)
+  message("Cash rate: RBA F1.1 (", basename(F_F11), ") for every quarter, after matching the ",
+          nrow(hist_chk), " history quarters of panel_main.csv.")
+} else {
+  cash_path <- tibble(
+    quarter = as.yearqtr(c("2024 Q4","2025 Q1","2025 Q2","2025 Q3","2025 Q4")),
+    cr = c(4.35, 4.10, 3.85, 3.60, 3.60))
+  message("Cash rate: ", basename(F_F11), " is not in ", RAW, "/, so the history comes from ",
+          "panel_main.csv and 2024 Q4-2025 Q4 from the hand-typed path of the June 2026 run.")
+}
 stopifnot(max(cash_path$quarter) == TARGET_END)   # fail loudly if it goes stale
 ext <- ext |>
   left_join(tidyr::expand_grid(city = CITIES, cash_path) |> transmute(city, quarter, cash_rate = cr),

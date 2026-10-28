@@ -10,13 +10,34 @@
 #   - STRAY   : an ABS-looking file in raw/ that is NOT an expected input
 #               (e.g. the superseded all-groups OMAD export, or a wrong export)
 #
+# It checks the folder that RAW names in 00_setup.R, so a refresh run with RAW
+# set to raw_rev/refresh checks that folder. It also reports the optional
+# inputs, such as f01hist.xlsx, present or absent.
+#
 # Usage (from project root):
-#   Rscript verify_raw.R
+#   Rscript verify_raw.R                    the folder RAW names in 00_setup.R
+#   Rscript verify_raw.R raw_rev/refresh    a folder of your choice
 # Exit status 0 if all expected inputs are present, 1 otherwise — so it can gate
 # a run:  Rscript verify_raw.R && Rscript run_all.R
 # =============================================================================
 
+# The folder to check: the first command-line argument if given, else RAW as
+# set in 00_setup.R (raw/, or raw_rev/refresh for a data refresh), else raw/.
 RAW <- "raw"
+cl_args <- commandArgs(trailingOnly = TRUE)
+if (length(cl_args)) {
+  RAW <- cl_args[1]
+} else if (file.exists("00_setup.R")) {
+  raw_def <- grep("^RAW\\s*<-", readLines("00_setup.R", warn = FALSE), value = TRUE)
+  if (length(raw_def))
+    RAW <- eval(parse(text = sub("#.*$", "", sub("^RAW\\s*<-", "", raw_def[1]))))
+}
+
+# Optional inputs: read when present; without them the pipeline falls back to
+# an earlier source and says so in its log (raw/README.md).
+optional <- c(
+  "f01hist.xlsx"   # RBA F1.1, cash rate target (01_build_panel.R, section C)
+)
 
 # --- The canonical input set the pipeline reads (14 files) -------------------
 # Mirrors raw/README.md. Update here AND there if the inputs change.
@@ -93,6 +114,17 @@ if (length(punct)) {
 if (length(missing)) {
   cat("\nMISSING (no file, no punctuation variant):\n")
   for (m in missing) cat("  ", m, "\n")
+}
+
+opt_present <- intersect(optional, present)
+opt_absent  <- setdiff(optional, present)
+if (length(opt_present)) {
+  cat("\nOPTIONAL inputs present (used):\n")
+  for (o in opt_present) cat("  ", o, "\n")
+}
+if (length(opt_absent)) {
+  cat("\nOPTIONAL inputs absent (the pipeline falls back; see raw/README.md):\n")
+  for (o in opt_absent) cat("  ", o, "\n")
 }
 
 stray_known <- intersect(present, known_strays)

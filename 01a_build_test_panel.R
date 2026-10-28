@@ -40,9 +40,10 @@
 #      c("city", "qid"), or c("unit", "qid") for the stacked file.
 #   4. Flags mark quarters that tests should be able to drop or control for.
 #
-# Not changed here: the cash-rate tail in 01_build_panel.R (cash_path) uses the
-# rate at the end of 2025 Q1-Q3, while the history uses quarterly averages.
-# The effect on the estimates is nil; fix it when cash_path is next extended.
+# The cash rate comes from 01_build_panel.R. Since 27 October 2026 it takes
+# every quarter from RBA table F1.1 when f01hist.xlsx is in RAW. Without that
+# file, 2025 Q1-Q3 hold end-of-quarter rates while the history holds quarterly
+# averages; the difference moves no estimate in 02b or 02c by more than 0.001.
 # =============================================================================
 
 # Log this run in run_logs/ (see 00_run_log.R); the last line closes the log.
