@@ -16,6 +16,8 @@
 #            rent equation (the same plus employment growth). Panel B lags
 #            credit and the cash rate one quarter.
 #   Appendix C checks, on the Table 5 price equation unless stated:
+#     cash rate       the cash-rate change x post-2017 added to all four Table 5
+#                     equations (lagged with lagged credit)
 #     pandemic        credit x post-2020 added, with its intercept
 #     Sydney          credit x post-2017 x Sydney added; Sydney's total slope
 #     national share  growth of the national investor share of housing credit
@@ -163,7 +165,8 @@ for (m in names(MEASURES)) {
   x <- MEASURES[[m]]; xl <- paste0(x, "_l1")
   d <- base |> mutate(cr = .data[[x]], cr_l1 = .data[[xl]],
                       ix = cr * .data[[POST]], ixl = cr_l1 * .data[[POST]],
-                      ixc = cr * .data[[COVID]], ixs = cr * .data[[POST]] * syd)
+                      ixc = cr * .data[[COVID]], ixs = cr * .data[[POST]] * syd,
+                      cx = d_cash * .data[[POST]], cxl = d_cash_l1 * .data[[POST]])
 
   # Table 4: price equation
   t4c <- fit(d, "dl_price", c("cr", "d_cash", "tight_l1"))
@@ -184,6 +187,18 @@ for (m in names(MEASURES)) {
   add(m, "table5", "A rent",  "cr",  est(r5a, "cr"),  nobs(r5a))
   add(m, "table5", "B price", "cr_l1", est(p5b, "cr_l1"), nobs(p5b))
   add(m, "table5", "B rent",  "cr_l1", est(r5b, "cr_l1"), nobs(r5b))
+
+  # Appendix C: Table 5 with the cash-rate change also interacted with post-2017
+  # (the robustness check that Section 3.4 promises; added 26 October 2026)
+  p5ac <- fit(d, "dl_price", c("cr", "ix", "cx", POST, CTRL$price))
+  r5ac <- fit(d, "dl_rent",  c("cr", "ix", "cx", POST, CTRL$rent))
+  p5bc <- fit(d, "dl_price", c("cr_l1", "ixl", "cxl", POST, CTRL$price_lag))
+  r5bc <- fit(d, "dl_rent",  c("cr_l1", "ixl", "cxl", POST, CTRL$rent_lag))
+  for (mm in list(list(p5ac, "A price", c("cr", "ix", "d_cash", "cx")),
+                  list(r5ac, "A rent",  c("cr", "ix", "d_cash", "cx")),
+                  list(p5bc, "B price", c("cr_l1", "ixl", "d_cash_l1", "cxl")),
+                  list(r5bc, "B rent",  c("cr_l1", "ixl", "d_cash_l1", "cxl"))))
+    for (tm in mm[[3]]) add(m, "cash_interaction", mm[[2]], tm, est(mm[[1]], tm), nobs(mm[[1]]))
 
   # Table 5 with the same four controls in both equations (02b design)
   p5s <- fit(d, "dl_price", c("cr", "ix", POST, CTRL$rent))
@@ -371,6 +386,8 @@ tryCatch({
   show(filter(res, block == "table5", term %in% c("cr", "cr_l1")) |> arrange(model, measure))
   cat("\n   Same four controls in both equations (02b design), price equation\n")
   show(filter(res, block == "table5_same_controls") |> arrange(model, measure))
+  cat("\n   With the cash-rate change also interacted with post-2017 (cx; cxl with lagged credit)\n")
+  show(filter(res, block == "cash_interaction") |> arrange(measure, model, term))
 
   cat("\n4. Appendix C checks\n")
   show(filter(res, block %in% c("pandemic", "sydney", "national_share", "switching")) |>

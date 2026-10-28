@@ -26,6 +26,8 @@
 #   tests_granger_dh.csv    Dumitrescu-Hurlin tests, with city-by-city results
 #   tests_stacked.csv       price-rent comparisons
 #   tests_summary.txt       the main numbers, also printed to the console
+#   table_break_tests.tex   the paper's table of break tests (main measure)
+#   table_granger.tex       the paper's table of Granger tests (main measure)
 #
 # Design, as agreed on 8 October 2026:
 #   - Credit measures: seasonally adjusted investor commitments (main); the
@@ -401,5 +403,148 @@ tryCatch({
   close(con)
   options(old_width)
 })
+
+# ---- LaTeX tables for the paper (added 26 October 2026) -------------------------------
+# Two tables, main credit measure, full sample, written in full (caption, label,
+# notes) so they can be pasted into the manuscript as they are:
+#   table_break_tests.tex  dated breaks, the stacked rent-minus-price difference,
+#                          and the unknown-date test
+#   table_granger.tex      Granger tests in both directions
+fmt3  <- function(v) ifelse(v < 0, sprintf("$-$%.3f", abs(v)), sprintf("%.3f", v))
+fmtse <- function(v) sprintf("(%.3f)", v)
+fmtp  <- function(p) ifelse(p < 0.001, "$<$0.001", sprintf("%.3f", p))
+star  <- function(p) ifelse(p < 0.01, "\\sym{***}", ifelse(p < 0.05, "\\sym{**}",
+                            ifelse(p < 0.10, "\\sym{*}", "")))
+star_sup <- function(w) ifelse(w > CV_SUP[["1%"]], "\\sym{***}", ifelse(w > CV_SUP[["5%"]], "\\sym{**}",
+                               ifelse(w > CV_SUP[["10%"]], "\\sym{*}", "")))
+qfmt  <- function(q) sub(" ", ":", format(as.yearqtr(q)))      # "2017 Q1" -> "2017:Q1"
+row_tex <- function(label, cells) paste0(label, " & ", paste(cells, collapse = " & "), " \\\\")
+
+# Table: break tests. Columns: price and rent equations, then rent minus price,
+# each with current-quarter and lagged credit.
+COLS_EQ <- expand_grid(outcome = c("price", "rent"), timing = c("current", "lagged"))
+BREAK_ROWS <- c(post_2015q1 = "2015:Q1, investor benchmark",
+                post_2017q1 = "2017:Q1, break in Table~\\ref{tab:divergence}",
+                post_2017q2 = "2017:Q2, interest-only cap")
+dated_main <- filter(dated, measure == "main", variant == "full")
+stk_main   <- filter(stacked, measure == "main")
+sup_main   <- filter(sup, measure == "main")
+
+tab_b <- c(
+  "\\begin{table}[t]",
+  "\\centering",
+  "\\footnotesize",
+  "\\begin{threeparttable}",
+  "\\caption{Break tests on the investor-credit slope}",
+  "\\label{tab:break_tests}",
+  "\\begin{tabular*}{\\textwidth}{@{\\extracolsep{\\fill}}lcccccc@{}}",
+  "\\toprule",
+  " & \\multicolumn{2}{c}{Price equation} & \\multicolumn{2}{c}{Rent equation} & \\multicolumn{2}{c}{Rent minus price} \\\\",
+  "\\cmidrule(lr){2-3}\\cmidrule(lr){4-5}\\cmidrule(lr){6-7}",
+  " & Current & Lagged & Current & Lagged & Current & Lagged \\\\",
+  "\\midrule",
+  "\\multicolumn{7}{l}{\\emph{Panel A. Change in the credit slope at a dated break}} \\\\")
+for (bv in names(BREAK_ROWS)) {
+  eq <- lapply(seq_len(nrow(COLS_EQ)), function(j)
+    filter(dated_main, outcome == COLS_EQ$outcome[j], timing == COLS_EQ$timing[j], break_var == bv))
+  st <- lapply(c("current", "lagged"), function(tm) filter(stk_main, timing == tm, break_var == bv))
+  est_cells <- c(sapply(eq, function(r) paste0(fmt3(r$change), star(r$p))),
+                 sapply(st, function(r) paste0(fmt3(r$diff_change), star(r$p_change))))
+  se_cells  <- c(sapply(eq, function(r) fmtse(r$se_change)),
+                 sapply(st, function(r) fmtse(r$se_diff_change)))
+  tab_b <- c(tab_b, row_tex(BREAK_ROWS[[bv]], est_cells), row_tex("", se_cells))
+}
+# Panel B rows, in the column order of COLS_EQ; the rent-minus-price columns stay empty.
+sup_rows <- bind_rows(lapply(seq_len(nrow(COLS_EQ)), function(j)
+  filter(sup_main, outcome == COLS_EQ$outcome[j], timing == COLS_EQ$timing[j])))
+stopifnot(nrow(sup_rows) == nrow(COLS_EQ))
+sup_wald_cells   <- paste0(sprintf("%.1f", sup_rows$sup_wald), star_sup(sup_rows$sup_wald))
+sup_date_cells   <- paste0(qfmt(sup_rows$sup_date), ifelse(sup_rows$at_edge, "$^{a}$", ""))
+sup_change_cells <- fmt3(sup_rows$change_at_sup)
+tab_b <- c(tab_b,
+  "\\addlinespace",
+  sprintf("\\multicolumn{7}{l}{\\emph{Panel B. Break at an unknown date, %s to %s}} \\\\",
+          qfmt(min(cand)), qfmt(max(cand))),
+  row_tex("Largest Wald statistic", c(sup_wald_cells, "", "")),
+  row_tex("Date of the largest statistic", c(sup_date_cells, "", "")),
+  row_tex("Change in the credit slope at that date", c(sup_change_cells, "", "")),
+  "\\bottomrule",
+  "\\end{tabular*}",
+  "\\begin{tablenotes}[flushleft]\\footnotesize",
+  paste0("\\item Main credit measure (seasonally adjusted), ", nrow(base), " city-quarters. ",
+         "Each regression adds to the city fixed effects an indicator that is one from the break ",
+         "quarter on and its interaction with credit growth, in the current quarter or lagged one ",
+         "quarter. Both equations have the same four controls: the cash-rate change (lagged with ",
+         "lagged credit), lagged tightness, wage growth and employment growth. The price equation ",
+         "therefore differs slightly from Table~\\ref{tab:divergence}, which omits employment ",
+         "growth. Panel A: the coefficient on the interaction, that is, the change in the credit ",
+         "slope after the break, with Driscoll--Kraay standard errors in parentheses. Rent minus ",
+         "price: the rent change less the price change, from the two equations stacked. Panel B: ",
+         "the largest Driscoll--Kraay Wald statistic for a change in the credit slope over the ",
+         length(cand), " candidate quarters, against the critical values of ",
+         "\\citet{andrews1993tests, andrews2003tests} for one restriction and 15 percent trimming: ",
+         sprintf("%.2f (10 percent), %.2f (5 percent) and %.2f (1 percent). ",
+                 CV_SUP[["10%"]], CV_SUP[["5%"]], CV_SUP[["1%"]]),
+         "$^{a}$The first candidate date, so the test compares the first ",
+         sum(sort(unique(base$quarter)) < min(cand)), " quarters of the sample with the rest. ",
+         "\\sym{*}$p<0.10$, \\sym{**}$p<0.05$, \\sym{***}$p<0.01$."),
+  "\\end{tablenotes}",
+  "\\end{threeparttable}",
+  "\\end{table}")
+writeLines(tab_b, file.path(OUTDIR, "table_break_tests.tex"))
+
+# Table: Granger tests in both directions, main measure.
+GR_COLS <- tibble(outcome   = c("price", "price", "rent", "rent"),
+                  direction = c("credit_to_outcome", "outcome_to_credit",
+                                "credit_to_outcome", "outcome_to_credit"),
+                  head      = c("Credit $\\to$ price", "Price $\\to$ credit",
+                                "Credit $\\to$ rent", "Rent $\\to$ credit"))
+gm <- filter(granger, measure == "main")
+gcell <- function(lags_, effects_, f) sapply(seq_len(nrow(GR_COLS)), function(j) {
+  r <- filter(gm, outcome == GR_COLS$outcome[j], direction == GR_COLS$direction[j],
+              lags == lags_, effects == effects_)
+  f(r)
+})
+tab_g <- c(
+  "\\begin{table}[t]",
+  "\\centering",
+  "\\small",
+  "\\begin{threeparttable}",
+  "\\caption{Granger tests in both directions}",
+  "\\label{tab:granger}",
+  "\\begin{tabular}{lcccc}",
+  "\\toprule",
+  " & \\multicolumn{2}{c}{Prices} & \\multicolumn{2}{c}{Rents} \\\\",
+  "\\cmidrule(lr){2-3}\\cmidrule(lr){4-5}",
+  paste0(" & ", paste(GR_COLS$head, collapse = " & "), " \\\\"),
+  "\\midrule",
+  row_tex("Wald statistic, 4 lags", gcell(4, "city", function(r) sprintf("%.1f", r$wald))),
+  row_tex("$p$-value", gcell(4, "city", function(r) fmtp(r$p))),
+  row_tex("Sum of the lag coefficients", gcell(4, "city", function(r) fmt3(r$sum_lags))),
+  row_tex("", gcell(4, "city", function(r) fmtse(r$se_sum))),
+  "\\addlinespace",
+  "\\multicolumn{5}{l}{\\emph{$p$-value in other specifications}} \\\\",
+  row_tex("2 lags", gcell(2, "city", function(r) fmtp(r$p))),
+  row_tex("6 lags", gcell(6, "city", function(r) fmtp(r$p))),
+  row_tex("4 lags, quarter fixed effects", gcell(4, "city_and_quarter", function(r) fmtp(r$p))),
+  "\\midrule",
+  row_tex("Observations", gcell(4, "city", function(r) sprintf("%d", as.integer(r$n)))),
+  "\\bottomrule",
+  "\\end{tabular}",
+  "\\begin{tablenotes}[flushleft]\\footnotesize",
+  paste0("\\item Main credit measure (seasonally adjusted). Each column regresses the growth of the ",
+         "predicted variable on four lags of itself and four lags of the predicting variable, with ",
+         "city fixed effects and quarter-of-year dummies. The test is that the lags of the ",
+         "predicting variable are all zero: a Driscoll--Kraay Wald test with four degrees of ",
+         "freedom. The sum of their coefficients has its Driscoll--Kraay standard error in ",
+         "parentheses. Every specification uses the same ", nrow(gr), " city-quarters, ",
+         qfmt(min(gr$quarter)), " to ", qfmt(max(gr$quarter)), ", which hold six lags. The last ",
+         "row replaces the quarter-of-year dummies with quarter fixed effects, which remove every ",
+         "national shock."),
+  "\\end{tablenotes}",
+  "\\end{threeparttable}",
+  "\\end{table}")
+writeLines(tab_g, file.path(OUTDIR, "table_granger.tex"))
+message("Wrote table_break_tests.tex and table_granger.tex to ", OUTDIR, "/")
 
 end_run_log()
