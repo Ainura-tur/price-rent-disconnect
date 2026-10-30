@@ -21,6 +21,10 @@
 # Writes: output/est_*.txt summaries; output/rolling_financial_r2.csv
 # =============================================================================
 
+# Log this run in run_logs/ (see 00_run_log.R); the last line closes the log.
+source("00_run_log.R")
+start_run_log("02_estimate")
+
 # Namespace protection (avoid MASS/stats masking dplyr verbs)
 select <- dplyr::select;       filter    <- dplyr::filter
 mutate <- dplyr::mutate;       slice     <- dplyr::slice
@@ -386,6 +390,9 @@ if (requireNamespace("fwildclusterboot", quietly = TRUE)) {
     # reported p of 0.0000 is an enumeration artifact, not precision. Webb draws
     # from 6 points (6^5 = 7776 combinations), which is the standard fix for
     # very few clusters; the p-value below is interpretable as continuous.
+    # boottest() draws its weights with both R's and dqrng's random number
+    # generators; seed both so that the p-value is the same on every run.
+    set.seed(20261023); dqrng::dqset.seed(20261023)
     bt <- fwildclusterboot::boottest(fit, clustid = "city", param = "inv_post",
                                      B = 9999, type = "webb")
     cat(sprintf("  inv:post wild-cluster p = %.4f (B=9999, Webb weights, 5 clusters)\n",
@@ -715,27 +722,41 @@ rent_trend <- plm(diff(l_rent) ~ lag(l_pr_gap,1) +
 cat("  Rent fundamentals interacted with a linear trend (DK SEs):\n")
 print(dk_coeftest(rent_trend)); robust(dk_coeftest(rent_trend), "alt_rent_trend.txt")
 
-# Rolling 20q window: wage and employment coefficients over time.
+# Rolling 20q window: wage and employment coefficients over time, with the
+# Driscoll-Kraay p-values whose counts Section 4.2 of the paper reports.
 rent_roll_coef <- function(df) {
   Pw <- pdata.frame(df, index = c("city","quarter"))
   m <- try(plm(diff(l_rent) ~ lag(l_pr_gap,1) + lag(tightness,1) + diff(l_wpi) + diff(l_emp),
                Pw, model = "within"), silent = TRUE)
-  if (inherits(m,"try-error")) return(c(wpi = NA, emp = NA, tight = NA))
+  if (inherits(m,"try-error"))
+    return(c(wpi = NA, emp = NA, tight = NA, wpi_p = NA, emp_p = NA, tight_p = NA))
   cf <- coef(m)
+  p  <- tryCatch(dk_coeftest(m)[, 4], error = function(e) cf * NA)
   c(wpi = unname(cf["diff(l_wpi)"]), emp = unname(cf["diff(l_emp)"]),
-    tight = unname(cf["lag(tightness, 1)"]))
+    tight = unname(cf["lag(tightness, 1)"]),
+    wpi_p = unname(p["diff(l_wpi)"]), emp_p = unname(p["diff(l_emp)"]),
+    tight_p = unname(p["lag(tightness, 1)"]))
 }
 qs <- sort(unique(d$qdate)); win <- 20
 rent_roll <- bind_rows(lapply(qs[qs >= qs[win]], function(end) {
   wq <- qs[qs > end - win/4 & qs <= end]
   if (length(wq) < win) return(NULL)
   cf <- rent_roll_coef(filter(d, qdate %in% wq))
-  data.frame(qend = end, wpi_coef = cf["wpi"], emp_coef = cf["emp"], tight_coef = cf["tight"])
+  data.frame(qend = end, wpi_coef = cf["wpi"], emp_coef = cf["emp"], tight_coef = cf["tight"],
+             wpi_p = cf["wpi_p"], emp_p = cf["emp_p"], tight_p = cf["tight_p"])
 }))
 write_csv(rent_roll, file.path(OUTDIR, "alt_rent_rolling_coef.csv"))
 cat(sprintf("  Rolling wage coef: first %.2f -> last %.2f; employment: %.2f -> %.2f\n",
             head(rent_roll$wpi_coef,1), tail(rent_roll$wpi_coef,1),
             head(rent_roll$emp_coef,1), tail(rent_roll$emp_coef,1)))
+cat(sprintf("  %d windows. Wage coefficient positive in %d, significant at 10%% (DK) in %d.\n",
+            nrow(rent_roll), sum(rent_roll$wpi_coef > 0, na.rm = TRUE),
+            sum(rent_roll$wpi_p < 0.10, na.rm = TRUE)))
+cat(sprintf("  Tightness coefficient positive and significant at 5%% (DK) in %d.\n",
+            sum(rent_roll$tight_coef > 0 & rent_roll$tight_p < 0.05, na.rm = TRUE)))
+cat("  Windows in which the wage coefficient is significant at 10%, by end quarter:\n")
+cat(strwrap(paste(sub(" ", ":", format(as.yearqtr(rent_roll$qend[which(rent_roll$wpi_p < 0.10)]))),
+                  collapse = ", "), indent = 4, exdent = 4), sep = "\n")
 cat("  Wrote alt_rent_rolling_coef.csv (plot wpi_coef and emp_coef over qend).\n")
 
 ## 8.2 Proper panel cointegration --------------------------------------------
@@ -763,13 +784,20 @@ if (requireNamespace("pco", quietly = TRUE)) {
                       conditionMessage(attr(res,"condition")), "\n")
 }
 if (!coint_ran) {
-  # Report the group-mean ADF (from 7.3) against Pedroni critical values.
-  cat("  Falling back to group-mean residual ADF with Pedroni critical values.\n")
-  cat("  Pedroni group-ADF (panel, no time trend) approx 5% critical value ~ -1.70 to -2.0\n")
-  cat("  depending on N,T; the group-mean statistic from 7.3 was about -1.86.\n")
-  cat("  DECISION: borderline; combined with the ~0 insignificant gap coefficient in\n")
-  cat("  every rent spec, the safe reading is NO robust cointegration -> use\n")
-  cat("  'lagged price-rent gap as a level control', not 'error-correction term'.\n")
+  # Judge the city statistics of 7.3 one by one. Their group mean is a plain
+  # average, and Pedroni's critical values apply only after it is standardised.
+  # Engle-Granger 5% critical value, two variables with a constant, about 78
+  # quarters: -3.42 (MacKinnon 2010, response surface).
+  eg_cv <- -3.42
+  cat("  Falling back to the residual-based test of 7.3, city by city.\n")
+  if (exists("group_t")) {
+    n_rej <- sum(group_t$adf_t < eg_cv, na.rm = TRUE)
+    cat(sprintf("  %d of %d cities reject a unit root in the residuals at 5%% (critical value %.2f).\n",
+                n_rej, sum(!is.na(group_t$adf_t)), eg_cv))
+    if (n_rej == 0)
+      cat("  No cointegration: call the lagged price-rent gap a level control,",
+          "not an error-correction term.\n")
+  }
 }
 
 ## 8.3 Flexible-form divergence check (spline, not full DML) ------------------
@@ -1052,3 +1080,5 @@ cat("  sign alongside the spline Wald, not stars alone.\n")
 cat("\n############  TIGHTNESS NONLINEARITY COMPLETE  ############\n")
 cat("Wrote nlin_rent_tightness_spline.txt, nlin_rent_tightness_threshold.txt,\n",
     "     nlin_price_tightness_threshold.txt to", OUTDIR, "/\n")
+
+end_run_log()

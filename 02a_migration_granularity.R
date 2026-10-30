@@ -1,5 +1,5 @@
 # =============================================================================
-# 03_migration_granularity.R
+# 02a_migration_granularity.R
 #
 # Does more granular migration shed further light on the rent or price equation?
 #
@@ -33,6 +33,10 @@
 # Reads:  clean/panel_combined.rds
 # Writes: output/granular_*.txt
 # =============================================================================
+
+# Log this run in run_logs/ (see 00_run_log.R); the last line closes the log.
+source("00_run_log.R")
+start_run_log("02a_migration_granularity")
 
 # Namespace protection (avoid MASS/stats masking dplyr verbs)
 select <- dplyr::select;       filter    <- dplyr::filter
@@ -307,3 +311,5 @@ cat("  * If 1b lifts R2 for a renter-relevant numerator OR 2 rejects equality, t
 cat("    granularity is informative: consider reporting the better numerator as an\n")
 cat("    alternative tightness, with the five-cluster SE caveat from 7.4 and the\n")
 cat("    shorter COVID-guarded window noted.\n")
+
+end_run_log()
