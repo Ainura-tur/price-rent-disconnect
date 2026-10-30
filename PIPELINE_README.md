@@ -177,6 +177,19 @@ Beyond the merge:
    `02b` or `02c` by more than 0.001. `verify_raw.R` now checks the folder that
    `RAW` names in `00_setup.R` and reports `f01hist.xlsx` as an optional input.
 
+8. **A test of Proposition 3 (30 October 2026).** The model predicts a larger
+   price-credit slope when interest rates are low. `02c_main_tables_sa.R` now
+   interacts credit growth with the previous quarter's cash rate, demeaned, in
+   place of the post-2017 terms of Table 5, and reports the slope at cash rates
+   of 0.10 and 4.35 percent. On the panel of 27 October, which reproduces
+   Tables 4 and 5, the price interaction is -0.005 (p = 0.70) with current
+   credit and 0.004 (p = 0.68) with lagged credit. It stays insignificant with
+   the post-2017 terms kept and with credit x post-2020 added. The rent
+   interaction is negative and significant (-0.009, p = 0.004; -0.010,
+   p < 0.001 with lagged credit): the rent-credit slope is 0.02 to 0.03 at a
+   cash rate of 0.10 percent and about -0.01 at 4.35 percent. The model does
+   not predict this.
+
 ## Mechanism and nonlinearity checks
 
 The numbers below come from the run of 23 October 2026.

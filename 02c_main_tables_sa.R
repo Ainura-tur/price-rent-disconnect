@@ -18,6 +18,14 @@
 #   Appendix C checks, on the Table 5 price equation unless stated:
 #     cash rate       the cash-rate change x post-2017 added to all four Table 5
 #                     equations (lagged with lagged credit)
+#     cash-rate level Proposition 3: the four Table 5 equations with credit x the
+#                     level of the cash rate in place of credit x post-2017. The
+#                     level is the previous quarter's (the quarterly average of
+#                     the target), demeaned, and enters on its own as well. The
+#                     model predicts a negative price interaction. All four are
+#                     also run with the post-2017 terms kept, and with credit x
+#                     post-2020 added; the credit slope is reported at the cash
+#                     rates in CASH_AT (added 30 October 2026)
 #     pandemic        credit x post-2020 added, with its intercept
 #     Sydney          credit x post-2017 x Sydney added; Sydney's total slope
 #     national share  growth of the national investor share of housing credit
@@ -75,6 +83,8 @@ CTRL <- list(price     = c("d_cash",    "tight_l1", "dl_wpi"),
              price_lag = c("d_cash_l1", "tight_l1", "dl_wpi"),
              rent_lag  = c("d_cash_l1", "tight_l1", "dl_wpi", "dl_emp"))
 WEBB <- c(-sqrt(3/2), -1, -sqrt(1/2), sqrt(1/2), 1, sqrt(3/2))
+CASH_AT <- c(0.10, 4.35)          # cash rates (percent) at which to report the
+                                  # credit slope in the cash-rate level check
 
 # ---- Data ----------------------------------------------------------------------
 read_panel <- function(name) {
@@ -88,7 +98,7 @@ read_panel <- function(name) {
 tp <- read_panel("panel_tests")
 
 need <- c("city", "quarter", "qid", "s_base", "dl_price", "dl_rent", "dl_wpi", "dl_emp",
-          "d_cash", "d_cash_l1", "tight_l1", "tightness", "price_rent", "d_inv_share_sa",
+          "cash_rate", "d_cash", "d_cash_l1", "tight_l1", "tightness", "price_rent", "d_inv_share_sa",
           unname(MEASURES), paste0(MEASURES, "_l1"), POST, COVID,
           "inv_credit_nat", "oo_credit_nat", "net_switch_nat", "flag_reclass", "qtr")
 missing_cols <- setdiff(need, names(tp))
@@ -104,8 +114,10 @@ tp <- tp |>
          dl_nat_share = log(nat_share) - lag(log(nat_share))) |>
   ungroup() |>
   mutate(syd = as.integer(city == "Sydney"),
-         gap = log(price_rent))
+         gap = log(price_rent),
+         cash_l1 = cash_rate - d_cash)   # last quarter's cash rate, as 01a defines d_cash
 base <- filter(tp, s_base == 1)   # the 370 estimation rows, 2007 Q3 to 2025 Q4
+CASH_MEAN <- mean(base$cash_l1)   # the cash-rate level check demeans by this
 
 # ---- Helpers -------------------------------------------------------------------
 fit <- function(d, y, terms)
@@ -120,6 +132,12 @@ est <- function(m, term, V = dk_vcov(m)) {
 lin_comb <- function(m, terms, V = dk_vcov(m)) {
   b <- sum(coef(m)[terms]); se <- sqrt(sum(V[terms, terms]))
   c(est = b, se = se, p = 2 * pnorm(-abs(b / se)), chi2 = (b / se)^2)
+}
+# The same for a weighted sum; w is a vector of weights named by coefficient
+lin_w <- function(m, w, V = dk_vcov(m)) {
+  k <- names(w); b <- sum(coef(m)[k] * w)
+  se <- sqrt(as.numeric(crossprod(w, V[k, k] %*% w)))
+  c(est = b, se = se, p = 2 * pnorm(-abs(b / se)))
 }
 wald <- function(m, terms, V = dk_vcov(m)) {
   b <- coef(m)[terms]; W <- as.numeric(crossprod(b, solve(V[terms, terms], b)))
@@ -199,6 +217,36 @@ for (m in names(MEASURES)) {
                   list(p5bc, "B price", c("cr_l1", "ixl", "d_cash_l1", "cxl")),
                   list(r5bc, "B rent",  c("cr_l1", "ixl", "d_cash_l1", "cxl"))))
     for (tm in mm[[3]]) add(m, "cash_interaction", mm[[2]], tm, est(mm[[1]], tm), nobs(mm[[1]]))
+
+  # Appendix C: Proposition 3. Credit x the demeaned level of last quarter's cash
+  # rate (icx; icxl with lagged credit), with the level on its own (cash_c), in
+  # place of the post-2017 terms of Table 5. A negative price interaction means
+  # a larger price-credit slope when rates are low (added 30 October 2026).
+  d <- d |> mutate(cash_c = cash_l1 - CASH_MEAN, icx = cr * cash_c, icxl = cr_l1 * cash_c,
+                   ixcl = cr_l1 * .data[[COVID]])
+  p3 <- list(
+    list("level",       "A price", "dl_price", c("cr",    "icx",  "cash_c", CTRL$price)),
+    list("level",       "A rent",  "dl_rent",  c("cr",    "icx",  "cash_c", CTRL$rent)),
+    list("level",       "B price", "dl_price", c("cr_l1", "icxl", "cash_c", CTRL$price_lag)),
+    list("level",       "B rent",  "dl_rent",  c("cr_l1", "icxl", "cash_c", CTRL$rent_lag)),
+    list("level, post", "A price", "dl_price", c("cr",    "icx",  "cash_c", "ix",  POST,  CTRL$price)),
+    list("level, post", "A rent",  "dl_rent",  c("cr",    "icx",  "cash_c", "ix",  POST,  CTRL$rent)),
+    list("level, post", "B price", "dl_price", c("cr_l1", "icxl", "cash_c", "ixl", POST,  CTRL$price_lag)),
+    list("level, post", "B rent",  "dl_rent",  c("cr_l1", "icxl", "cash_c", "ixl", POST,  CTRL$rent_lag)),
+    list("level, 2020", "A price", "dl_price", c("cr",    "icx",  "cash_c", "ixc",  COVID, CTRL$price)),
+    list("level, 2020", "A rent",  "dl_rent",  c("cr",    "icx",  "cash_c", "ixc",  COVID, CTRL$rent)),
+    list("level, 2020", "B price", "dl_price", c("cr_l1", "icxl", "cash_c", "ixcl", COVID, CTRL$price_lag)),
+    list("level, 2020", "B rent",  "dl_rent",  c("cr_l1", "icxl", "cash_c", "ixcl", COVID, CTRL$rent_lag)))
+  for (s in p3) {
+    mod <- fit(d, s[[3]], s[[4]]); V <- dk_vcov(mod)
+    blk <- paste("cash_level:", s[[1]])
+    for (tm in intersect(s[[4]], c("cr", "cr_l1", "icx", "icxl", "cash_c", "ix", "ixl", "ixc", "ixcl")))
+      add(m, blk, s[[2]], tm, est(mod, tm, V), nobs(mod), r2w(mod))
+    slope <- s[[4]][1]; inter <- s[[4]][2]
+    for (lv in CASH_AT)
+      add(m, blk, s[[2]], sprintf("slope at cash rate %.2f", lv),
+          lin_w(mod, setNames(c(1, lv - CASH_MEAN), c(slope, inter)), V), nobs(mod))
+  }
 
   # Table 5 with the same four controls in both equations (02b design)
   p5s <- fit(d, "dl_price", c("cr", "ix", POST, CTRL$rent))
@@ -416,6 +464,18 @@ tryCatch({
 
   cat("\n6. Seasonal noise in the original series, before and after 2017\n")
   print(as.data.frame(season |> mutate(across(where(is.numeric) & !n, ~ round(.x, 3)))), row.names = FALSE)
+
+  cat("\n7. Proposition 3: credit x the level of the cash rate\n")
+  cat(sprintf(paste0("   icx = credit x (last quarter's cash rate - %.3f), the sample mean; icxl with",
+                     " lagged credit;\n   cash_c = the demeaned level on its own. The model predicts",
+                     " icx < 0 in the price equation.\n"), CASH_MEAN))
+  for (b in c("level", "level, post", "level, 2020")) {
+    cat("\n   ", c(level = "In place of the post-2017 terms of Table 5",
+                   "level, post" = "With the post-2017 terms of Table 5 kept",
+                   "level, 2020" = "With credit x post-2020 and its intercept added")[[b]],
+        "\n", sep = "")
+    show(filter(res, block == paste("cash_level:", b)) |> arrange(measure, model))
+  }
 }, finally = {
   sink()
   close(con)

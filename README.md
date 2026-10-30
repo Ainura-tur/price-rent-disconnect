@@ -44,7 +44,7 @@ ABS Data Explorer downloads need renaming before a first run; see
 | 02 | `02_estimate.R` | 01 | the rent equation (Table 3), split-sample and rolling-window checks, and robustness checks in Appendix C |
 | 02a | `02a_migration_granularity.R` | 01 | checks that split migration by type (not reported in the paper) |
 | 02b | `02b_break_predictive_tests.R` | 01a | break tests and Granger tests (Tables 6 and 7), and stacked price–rent tests |
-| 02c | `02c_main_tables_sa.R` | 01a | Tables 2, 4 and 5, and the Appendix C checks on adjusted credit, including the cash-rate interaction |
+| 02c | `02c_main_tables_sa.R` | 01a | Tables 2, 4 and 5, and the Appendix C checks on adjusted credit, including the cash-rate interaction and the test of Proposition 3 (credit growth times the cash-rate level) |
 | 02d | `02d_unit_root_tests.R` | 01a | the unit-root tests (Table C.1) |
 | 03 | `03_figures.R` | 02 | figures and local projections of the earlier version, on the original credit series |
 | 03b | `03b_local_projections.R` | 01a | local projections on adjusted credit (Figure 5) |
