@@ -12,7 +12,9 @@ library(ggplot2); library(plm); library(lmtest); library(sandwich)
 
 theme_set(theme_minimal(base_size = 11) +
             theme(panel.grid.minor = element_blank(), legend.title = element_blank(),
-                  legend.position = "bottom", plot.title = element_text(face = "bold")))
+                  legend.position = "bottom",
+                  # Titles belong in the paper's captions, not on the figures.
+                  plot.title = element_blank(), plot.subtitle = element_blank()))
 
 panel <- readRDS(file.path(CLEAN, "panel_combined.rds")) |>
   mutate(qn = as.numeric(quarter), city = factor(city, levels = CITIES))
@@ -29,7 +31,7 @@ ggsave(file.path(OUTDIR, "fig_divergence.png"),
          labs(title = "The decoupling, with a mechanism",
               subtitle = "Partial R-squared of investor demand: price vs rent equation, 20-quarter rolling window",
               x = NULL, y = "Partial R-squared of investor lending"),
-       width = 9, height = 5, dpi = 150)
+       width = 9, height = 5, dpi = 300)
 
 ggsave(file.path(OUTDIR, "fig_price_rent_gap.png"),
        ggplot(panel, aes(qn, price_rent, colour = city)) +
@@ -39,7 +41,7 @@ ggsave(file.path(OUTDIR, "fig_price_rent_gap.png"),
          labs(title = "Price-rent gap: prices pulling away from rents",
               subtitle = "prop_price / rents (both 2011-12 = 100); rising = prices outran rents",
               x = NULL, y = "Price / rent"),
-       width = 9, height = 5, dpi = 150)
+       width = 9, height = 5, dpi = 300)
 
 ggsave(file.path(OUTDIR, "fig_real_rent.png"),
        ggplot(panel, aes(qn, real_rent, colour = city)) +
@@ -48,7 +50,7 @@ ggsave(file.path(OUTDIR, "fig_real_rent.png"),
          labs(title = "Wage-adjusted rents (rents relative to wages)",
               subtitle = "rent / WPI; the affordability angle tied to the policy's stated aim",
               x = NULL, y = "Rent / WPI"),
-       width = 9, height = 5, dpi = 150)
+       width = 9, height = 5, dpi = 300)
 
 ggsave(file.path(OUTDIR, "fig_rental_trajectories.png"),
        ggplot(panel, aes(qn, rents, colour = city)) +
@@ -57,7 +59,7 @@ ggsave(file.path(OUTDIR, "fig_rental_trajectories.png"),
          labs(title = "Rental price index by capital city",
               subtitle = "ABS 6401.0; 2011-12 = 100; dashed line marks 2017:Q1",
               x = NULL, y = "Rental price index (2011-12 = 100)"),
-       width = 9, height = 5, dpi = 150)
+       width = 9, height = 5, dpi = 300)
 message("Wrote divergence figures to ", OUTDIR, "/")
 
 # ---- Rolling rent-coefficient evolution (main-text evidence for Sec 4.2) ----
@@ -80,7 +82,7 @@ if (file.exists(roll_coef_path)) {
            labs(title = "Rent-equation coefficients over time",
                 subtitle = "20-quarter rolling within-city estimates; dashed line marks 2017:Q1",
                 x = NULL, y = "Coefficient on rent growth"),
-         width = 9, height = 5, dpi = 150)
+         width = 9, height = 5, dpi = 300)
   message("Wrote fig_rent_rolling_coef.png to ", OUTDIR, "/")
 } else {
   message("alt_rent_rolling_coef.csv not found; run 02_estimate.R section 8.1 first.")
@@ -95,7 +97,7 @@ if (file.exists(roll_coef_path)) {
 H <- 12; n_lag <- 4; z90 <- 1.645
 
 dlp <- panel |> arrange(city, quarter) |>
-  mutate(l_price = log(prop_price), l_rent = log(rents), l_inv = log(inv_commit)) |>
+  mutate(l_price = log(prop_price), l_rent = log(rents), l_inv = log(inv_commit_sa)) |>   # seasonally adjusted credit
   group_by(city) |>
   mutate(d_lprice = l_price - dplyr::lag(l_price), d_lrent = l_rent - dplyr::lag(l_rent),
          d_linv = l_inv - dplyr::lag(l_inv), d_cash = cash_rate - dplyr::lag(cash_rate),
@@ -145,7 +147,7 @@ ggsave(file.path(OUTDIR, "local_projection_irf.png"),
          labs(title = "Response to a one-SD investor-credit innovation",
               subtitle = "Cumulative response of the log level; 90% Driscoll-Kraay bands",
               x = "Quarters after the innovation", y = "Log points"),
-       width = 8, height = 5, dpi = 150)
+       width = 8, height = 5, dpi = 300)
 message("Wrote local_projection_irf.{csv,png} to ", OUTDIR, "/")
 
 # ---- Appendix: LP lag-length sensitivity of the RENT response ---------------
@@ -191,7 +193,7 @@ if (!is.null(rent_lag_irf) && nrow(rent_lag_irf) > 0) {
            labs(title = "Rent response under alternative LP control-lag counts",
                 subtitle = "Cumulative rent response to a one-SD credit innovation, log points",
                 x = "Quarters after the innovation", y = "Log points"),
-         width = 8, height = 5, dpi = 150)
+         width = 8, height = 5, dpi = 300)
   message("Wrote fig_lp_rent_lag_sensitivity.png to ", OUTDIR, "/")
 }
 

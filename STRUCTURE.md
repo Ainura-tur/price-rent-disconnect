@@ -10,8 +10,10 @@ depends on what*, so a data refresh shows exactly which files to touch.
 ```
 project-root/
 │
-├── run_all.R                      entry point: Rscript run_all.R
-│                                  sources 00_setup.R; runs 01 -> 02 -> 02a -> 03
+├── run_all.R                      entry point: Rscript run_all.R [--bootstrap]
+│                                  sources 00_setup.R; runs 01 -> 02 -> 02a -> 02c
+│                                  -> 02d -> 03 -> 03f -> 03g -> 04 -> 04b, and with
+│                                  --bootstrap also 05 -> 05c -> 05b
 │                                  (pre-flight: verify_raw.R); logs to logs/
 │
 ├── verify_raw.R                   read-only pre-run check of raw/ inputs
@@ -32,7 +34,16 @@ project-root/
 ├── 01_build_panel.R               STAGE 1  panel construction
 ├── 02_estimate.R                  STAGE 2  rent/price equations, divergence, IV
 ├── 02a_migration_granularity.R    STAGE 2a migration-disaggregation robustness
+├── 02c_sa_additions.R             STAGE 2c dynamic rent equation, local projections
+├── 02d_sa_tables.R                STAGE 2d appendix tables (C.2, C.3, E), Tables 1-2
 ├── 03_figures.R                   STAGE 3  divergence figures, local projections
+├── 03f_missing_figures.R          STAGE 3f APRA instruments, correlation-restriction test
+├── 03g_cr_endpoints.R             STAGE 3g MCUB endpoints (optional; needs ivcrtest)
+├── 04_model_matching.R            STAGE 4  model estimation by impulse-response matching
+├── 04b_identification.R           STAGE 4b distance profiles and sensitivity
+├── 05_bootstrap.R                 STAGE 5  block bootstrap of the model, in 22 chunks
+├── 05c_small_sample.R             STAGE 5c small-sample Monte Carlo
+├── 05b_bootstrap_summary.R        STAGE 5b bootstrap intervals and figure bands
 │
 │   standalone diagnostics (NOT in run_all.R; run by hand):
 ├── plot_migration_composition.R   NOM visa-share diagnostic figures
@@ -50,8 +61,10 @@ project-root/
 ## Naming convention
 
 Numbered scripts are pipeline stages run in order by `run_all.R`
-(`01`, `02`, `02a`, `03`). The `a` suffix denotes a stage that depends on and
-extends the same-numbered stage (`02a` reads the panel and reuses `02`'s
+(`01`, `02`, `02a`, `02c`, `02d`, `03`, `03f`, `03g`, `04`, `04b`, and with
+`--bootstrap` also `05`, `05c` and `05b`). README.md maps each table and figure
+in the paper to its output file. The `a` suffix denotes a stage that depends on
+and extends the same-numbered stage (`02a` reads the panel and reuses `02`'s
 inference machinery, but is logically a continuation of estimation). Unnumbered
 `.R` files are either sourced helpers (`00_setup.R`, `R/functions.R`) or hand-run
 diagnostics not in the master run.
@@ -99,18 +112,19 @@ The three modern-API filenames are centralised in `00_setup.R` as `F_LEND`,
 > `f01dhist.xls` (RBA F1 interest rates, referenced nowhere), and the alternative
 > all-groups OMAD export `ABS_OMAD_VISA,+..._AUS.Q.csv` (superseded by the
 > specific-group `F_OMAD`). See "Files deliberately NOT committed" in
-> `raw/README.md`. The committed input set is 13 files.
+> `raw/README.md`. The committed input set is 14 files.
 
-## clean/ — intermediates (stage 01 writes; 02/02a/03 read)
+## clean/ — intermediates (stage 01 writes; later stages read)
 
 | File | Written by | Read by |
 |------|-----------|---------|
 | `price_panel.rds`, `price_panel.csv` | 01 | (price reconstruction artefact) |
-| `panel_combined.rds` | 01 | 02, 02a, 03 |
+| `panel_combined.rds` | 01 | 02, 02a, 02c, 02d, 03, 03f, 04, 05 |
 | `panel_combined.csv` | 01 | (inspection; also copied to `output/`) |
 
-`panel_combined.rds` is the single analysis panel. Every estimation and figure
-stage reads it; nothing downstream re-reads `raw/`.
+`panel_combined.rds` is the single analysis panel. Stages 02c, 03f, 04 and 05
+also read the seasonally adjusted lending series from `F_LEND` in `raw/`; every
+other stage works from the panel.
 
 ## output/ — results
 
@@ -170,6 +184,48 @@ fig_rent_rolling_coef.png
 
 Figure 1 (transmission diagram) is TikZ in the `.tex`, not an R output.
 
+### Stages 02c and 02d — seasonally adjusted credit
+
+```
+sa_A_price.txt      sa_B_rent.txt       sa_B_omega.csv     sa_C_lp.csv
+sa_D_channel.txt    sa_F_oo.txt         sa_G_iv.csv        sa_H_presplice.txt
+fig_lp_irf_adjusted.png                 fig_lp_postimpact.png
+
+sa2_S1_stacked.txt  sa2_S2_breaks.txt   sa2_S3_granger.txt sa2_S4_seasonal.txt
+sa2_S5_sydney_cities.txt                sa2_S6_cash.txt    sa2_S7_reclass.txt
+sa2_S8_summary.txt
+```
+
+### Stages 03f and 03g — APRA instruments
+
+```
+lpiv_apra.csv           fig_lpiv_main.png
+cr_valid_ranges.csv     fig_cr_valid_range.png
+cr_mcub_endpoints.csv   (03g, only with ivcrtest)
+```
+
+### Stages 04 and 04b — the model
+
+```
+model_estimates.csv     model_profile_J.csv        model_fit.csv
+model_decomposition.csv model_counterfactual.csv   model_state_dependence.csv
+model_summary.txt       fig_model_fit.png          fig_model_counterfactual.png
+
+model_ident.txt         model_profile.csv          model_profile_omega.csv
+model_sensitivity.csv   fig_model_profile.png
+```
+
+### Stages 05, 05c and 05b — bootstrap and Monte Carlo
+
+```
+boot_panel.rds          cached panel with all leads and lags
+boot_b<block>_<first>_<last>.rds   one chunk of draws
+mc_small_<first>_<last>.rds        one chunk of pseudo-samples
+model_small_sample.txt  model_small_sample.csv
+boot_summary.csv        boot_shares.csv            boot_counterfactual_draws.csv
+fig_model_fit.png       fig_model_counterfactual.png   (redrawn with bands)
+```
+
 ### Stage 01 — optional diagnostics  (only if `BUILD_DIAGNOSTICS = TRUE`)
 
 ```
@@ -205,8 +261,10 @@ check_inv_intensity.png            derived inv_commit / employment sanity
 ## logs/
 
 `run_all.R` opens `logs/run_log_<YYYYMMDD_HHMMSS>.txt` and sinks both output and
-messages there (split to console). One file per run; includes `sessionInfo()`
-and per-stage OK/FAIL with timings.
+messages there (split to console). One file per run; includes `sessionInfo()`,
+a checksum for every script, warnings, the output of each bootstrap chunk, and
+per-stage OK/FAIL with timings. `logs/sessionInfo_<YYYYMMDD_HHMMSS>.txt` is
+written at the start of each run, so it lists only the packages loaded by then.
 
 ## Stage dependency summary
 
@@ -215,12 +273,20 @@ and per-stage OK/FAIL with timings.
                  │
 raw/ ──────────▶ 01_build_panel.R ──▶ clean/panel_combined.rds ──┬─▶ 02_estimate.R              ──▶ output/est_*, robust_*, mech_*, nlin_*, alt_*, rolling_*
                                                                  ├─▶ 02a_migration_granularity.R ──▶ output/granular_*
-                                                                 └─▶ 03_figures.R                ──▶ output/fig_*, local_projection_*, lp_*
+                                                                 ├─▶ 02c_sa_additions.R          ──▶ output/sa_*
+                                                                 ├─▶ 02d_sa_tables.R             ──▶ output/sa2_*
+                                                                 ├─▶ 03_figures.R                ──▶ output/fig_*, local_projection_*, lp_*
+                                                                 └─▶ 03f_missing_figures.R ──▶ 03g_cr_endpoints.R
+
+output/sa_B_omega.csv, sa_C_lp.csv ──▶ 04_model_matching.R ──▶ 04b_identification.R
+output/model_estimates.csv ──▶ 05_bootstrap.R ──▶ output/boot_b*.rds ──▶ 05c_small_sample.R ──▶ 05b_bootstrap_summary.R
 ```
 
-Only stage 01 touches `raw/`. Stages 02, 02a, 03 each read `panel_combined.rds`
-and are independent of one another (any can fail without blocking the others;
-`run_all.R` reports per-stage status and exits non-zero if any failed).
+`02_estimate.R` writes `rolling_financial_r2.csv`, which `03_figures.R` reads.
+Stage 04 needs the outputs of 02c, and stage 05 needs the outputs of 02c and 04.
+Any stage can fail without stopping the later stages from starting;
+`run_all.R` reports per-stage status and exits non-zero if any failed. If a
+bootstrap chunk fails, it skips 05c and 05b and reports the failure.
 
 ## Provisional / known-incomplete data
 
@@ -244,4 +310,3 @@ and are independent of one another (any can fail without blocking the others;
 5. `Rscript run_all.R`. The stage-01 coverage report prints the last non-NA
    quarter per variable; confirm the new sources reach the expected quarter
    (OMAD shares end one quarter early and carry the COVID NA gap by design).
-```
