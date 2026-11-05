@@ -3,10 +3,16 @@ _targets/
 
 # --- regenerated artefacts (rebuilt by the pipeline; do not commit) ----------
 clean/
-clean_rev/
+clean_rev/*
 output/
 output_old/
 logs/
+
+# --- committed exception: the index of rents on new leases --------------------
+# 01b builds it from the bond reports in raw_rev/ (not committed), and 02f
+# reads it. clean_rev/README.md gives its sources, licences and attribution.
+!clean_rev/new_lease_rents.csv
+!clean_rev/README.md
 
 # --- R session cruft ---------------------------------------------------------
 .Rhistory

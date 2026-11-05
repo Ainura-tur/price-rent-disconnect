@@ -14,7 +14,8 @@
 #   02d_sa_tables.R  Tables C.2-C.3, stacked tests, seasonal, Sydney, cash rate,
 #                    Tables 1-2 summary statistics
 #   02f_new_lease_tests.R  new-lease rents against the model (Tables F.1-F.2,
-#                    Figure F.1); needs clean_rev/new_lease_rents.csv from 01b
+#                    Figure F.1); reads clean_rev/new_lease_rents.csv
+#                    (committed; 01b rebuilds it)
 #   03_figures.R     Figure 1 and descriptive figures (Figures 2-4)
 #   03f_missing_figures.R  APRA instruments: Table D.1, Figures D.1-D.2
 #   03g_cr_endpoints.R     MCUB valid-range endpoints (needs the ivcrtest package)
@@ -80,13 +81,14 @@ run_step <- function(script) {
 # single "session ended" line). Wrapping the body fixes that and lets the driver
 # below capture every step's output to the log.
 main <- function() {
-  # Rents on new leases (Online Appendix F) need the state bond reports in
-  # raw_rev/, which the repository does not hold (README.md lists the sources).
-  # Without them 01b is skipped, and 02f runs only if an earlier 01b run left
-  # clean_rev/new_lease_rents.csv.
+  # Rents on new leases (Online Appendix F): 01b builds
+  # clean_rev/new_lease_rents.csv from the state bond reports in raw_rev/,
+  # which the repository does not hold (README.md lists the sources). The
+  # repository includes that file, so without raw_rev/ 01b is skipped and 02f
+  # runs on the committed copy.
   steps <- "01_build_panel.R"
   if (dir.exists("raw_rev")) steps <- c(steps, "01b_new_lease_rents.R")
-  else cat("\n(raw_rev/ not found; skipping 01b_new_lease_rents.R. README.md lists the bond reports it reads.)\n")
+  else cat("\n(raw_rev/ not found; skipping 01b_new_lease_rents.R, which rebuilds clean_rev/new_lease_rents.csv from the bond reports listed in README.md.)\n")
   steps <- c(steps, "02_estimate.R", "02a_migration_granularity.R",
              "02c_sa_additions.R", "02d_sa_tables.R")
   if (dir.exists("raw_rev") || file.exists(file.path("clean_rev", "new_lease_rents.csv")))

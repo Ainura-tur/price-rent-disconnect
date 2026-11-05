@@ -53,7 +53,9 @@ DSD-encoded names are the volatile part on a data refresh.
 `01b_new_lease_rents.R` reads the bond reports of four state agencies from
 `raw_rev/`, not from `raw/`. They are not committed (about 180 MB). The main
 README.md lists each source and where to download it; `fetch_rent_reports.R`
-downloads the South Australian workbooks and the NSW report PDFs.
+downloads the South Australian workbooks and the NSW report PDFs. The index
+that `01b` builds from them, `clean_rev/new_lease_rents.csv`, is committed;
+`clean_rev/README.md` gives its sources, licences and attribution.
 
 ## Files deliberately NOT committed
 

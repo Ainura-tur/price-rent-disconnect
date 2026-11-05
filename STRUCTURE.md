@@ -62,7 +62,7 @@ project-root/
 ├── raw/        INPUTS  (committed; treated as read-only)
 ├── raw_rev/    INPUTS  state bond reports for 01b (you supply; NOT committed)
 ├── clean/      INTERMEDIATE  (written by stage 01, read by later stages)
-├── clean_rev/  INTERMEDIATE  (written by stage 01b, read by 02f)
+├── clean_rev/  INTERMEDIATE  (written by stage 01b, read by 02f; new_lease_rents.csv committed)
 ├── output/     RESULTS  (tables, series, figures)
 └── logs/       per-run logs
 ```
@@ -139,8 +139,8 @@ says where to download each. `01b_new_lease_rents.R` reads:
 | `raw_rev/qld/` | Queensland RTA bond statistics | Five Greater Brisbane LGAs, 2012 on |
 | `raw_rev/sa/` | SA Private Rental Report, one workbook per quarter (`fetch_rent_reports.R sa`) | Metropolitan Adelaide, 2008 on |
 
-Without `raw_rev/`, `run_all.R` skips `01b`. It still runs `02f` if
-`clean_rev/new_lease_rents.csv` from an earlier `01b` run is present.
+Without `raw_rev/`, `run_all.R` skips `01b` and runs `02f` on the committed
+`clean_rev/new_lease_rents.csv`.
 
 ## clean/ — intermediates (stage 01 writes; later stages read)
 
@@ -161,6 +161,10 @@ other stage works from the panel.
 | `new_lease_rents.csv` | 01b | 02f (one row per city and quarter: log change, seasonally adjusted change, index) |
 | `new_lease_cells.csv` | 01b | (cell-level medians, bonds and weights) |
 | `new_lease_checks.txt` | 01b | (coverage, weights, seasonality and source checks) |
+
+Only `new_lease_rents.csv` is committed, with `clean_rev/README.md`, which
+describes its columns and gives the sources, licences and attribution. The
+other two files are git-ignored.
 
 ## output/ — results
 
