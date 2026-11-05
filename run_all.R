@@ -5,13 +5,17 @@
 # Pipeline (each stage reads the panel from 01 and earlier stages' outputs):
 #   00_setup.R       constants, paths, namespace, helpers      (sourced, not a step)
 #   01_build_panel.R price reconstruction + combined + extended panel
+#   01b_new_lease_rents.R  rents on new leases from the state bond reports in
+#                    raw_rev/ (Online Appendix F); skipped if raw_rev/ is absent
 #   02_estimate.R    Tables 3-4, Table C.1, rolling R^2, Appendix E robustness
 #   02a_migration_granularity.R  migration-disaggregation robustness
 #   02c_sa_additions.R  price momentum, dynamic rent equation (omega), local
 #                    projections (Figure 5, Figure E.1), channel test, checks
 #   02d_sa_tables.R  Tables C.2-C.3, stacked tests, seasonal, Sydney, cash rate,
 #                    Tables 1-2 summary statistics
-#   03_figures.R     descriptive figures (Figures 2-4, E.2)
+#   02f_new_lease_tests.R  new-lease rents against the model (Tables F.1-F.2,
+#                    Figure F.1); needs clean_rev/new_lease_rents.csv from 01b
+#   03_figures.R     Figure 1 and descriptive figures (Figures 2-4)
 #   03f_missing_figures.R  APRA instruments: Table D.1, Figures D.1-D.2
 #   03g_cr_endpoints.R     MCUB valid-range endpoints (needs the ivcrtest package)
 #   04_model_matching.R    model estimation, decomposition, counterfactual
@@ -22,6 +26,12 @@
 #   05b_bootstrap_summary.R  Tables 5-6 intervals, bands on Figures 6 and 8
 #                    These three take most of the run time, so they run only
 #                    with --bootstrap.
+#   04c_inflation.R  credit conditions and measured inflation (Section 6.6,
+#                    Figure 9); reads the bootstrap draws, so it runs after them,
+#                    or in a later run that finds a full set in output/
+#   06_paper_figures.R  redraws Figures 5-8, D.1-D.2 and E.1-E.2 in one style
+#                    from saved results; runs last, because earlier stages write
+#                    older versions of the same files
 #
 # Usage:  Rscript run_all.R               all stages except the bootstrap
 #         Rscript run_all.R --bootstrap   all stages including the bootstrap
@@ -70,9 +80,19 @@ run_step <- function(script) {
 # single "session ended" line). Wrapping the body fixes that and lets the driver
 # below capture every step's output to the log.
 main <- function() {
-  steps <- c("01_build_panel.R", "02_estimate.R", "02a_migration_granularity.R",
-             "02c_sa_additions.R", "02d_sa_tables.R", "03_figures.R",
-             "03f_missing_figures.R")
+  # Rents on new leases (Online Appendix F) need the state bond reports in
+  # raw_rev/, which the repository does not hold (README.md lists the sources).
+  # Without them 01b is skipped, and 02f runs only if an earlier 01b run left
+  # clean_rev/new_lease_rents.csv.
+  steps <- "01_build_panel.R"
+  if (dir.exists("raw_rev")) steps <- c(steps, "01b_new_lease_rents.R")
+  else cat("\n(raw_rev/ not found; skipping 01b_new_lease_rents.R. README.md lists the bond reports it reads.)\n")
+  steps <- c(steps, "02_estimate.R", "02a_migration_granularity.R",
+             "02c_sa_additions.R", "02d_sa_tables.R")
+  if (dir.exists("raw_rev") || file.exists(file.path("clean_rev", "new_lease_rents.csv")))
+    steps <- c(steps, "02f_new_lease_tests.R")
+  else cat("\n(clean_rev/new_lease_rents.csv not found; skipping 02f_new_lease_tests.R.)\n")
+  steps <- c(steps, "03_figures.R", "03f_missing_figures.R")
   if (requireNamespace("ivcrtest", quietly = TRUE)) steps <- c(steps, "03g_cr_endpoints.R")
   else cat("\n(ivcrtest not installed; skipping 03g_cr_endpoints.R. Install with\n",
            " remotes::install_github('Ainura-tur/ivcrtest').)\n")
@@ -157,11 +177,22 @@ main <- function() {
     }
     steps <- names(results)
   }
-  
+
+  # 04c reads the block-8 bootstrap draws despite its number, so it runs once a
+  # full set exists. 06 redraws eight figures that 02c, 03_figures, 03f, 04,
+  # 04b, 05c and 05b also write, so it runs last.
+  have_draws <- length(list.files("output", pattern = "^boot_b8_\\d+_\\d+\\.rds$")) > 0
+  if (have_draws && (!RUN_BOOT || isTRUE(results[["05_bootstrap.R"]])))
+    results <- c(results, "04c_inflation.R" = run_step("04c_inflation.R"))
+  else cat("\n(no full set of bootstrap draws in output/; skipping 04c_inflation.R. Run with --bootstrap.)\n")
+  results <- c(results, "06_paper_figures.R" = run_step("06_paper_figures.R"))
+  steps <- names(results)
+
   cat("\n=============================================================\n  SUMMARY\n")
   for (i in seq_along(steps)) cat(sprintf("  [%s] %s\n", if (results[i]) "OK " else "FAIL", steps[i]))
   cat("\n  Outputs: clean/panel_combined.{rds,csv}; output/est_*, robust_*, sa_*,\n")
-  cat("           sa2_*, lpiv_apra.csv, model_*, boot_* and fig_*.png. See README.md\n")
+  cat("           sa2_*, lpiv_apra.csv, new_lease_*, model_*, boot_* and fig_*.png;\n")
+  cat("           clean_rev/new_lease_*.csv from 01b. See README.md\n")
   cat("           for which file holds each table and figure.\n")
   
   invisible(all(results))

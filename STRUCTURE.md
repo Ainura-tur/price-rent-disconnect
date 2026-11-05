@@ -11,9 +11,10 @@ depends on what*, so a data refresh shows exactly which files to touch.
 project-root/
 │
 ├── run_all.R                      entry point: Rscript run_all.R [--bootstrap]
-│                                  sources 00_setup.R; runs 01 -> 02 -> 02a -> 02c
-│                                  -> 02d -> 03 -> 03f -> 03g -> 04 -> 04b, and with
-│                                  --bootstrap also 05 -> 05c -> 05b
+│                                  sources 00_setup.R; runs 01 -> 01b -> 02 -> 02a
+│                                  -> 02c -> 02d -> 02f -> 03 -> 03f -> 03g -> 04
+│                                  -> 04b, with --bootstrap also 05 -> 05c -> 05b,
+│                                  then 04c (once bootstrap draws exist) and 06
 │                                  (pre-flight: verify_raw.R); logs to logs/
 │
 ├── verify_raw.R                   read-only pre-run check of raw/ inputs
@@ -32,38 +33,50 @@ project-root/
 │                                  migration-share guards (NOM_FLOOR, SHARE_BAND)
 │
 ├── 01_build_panel.R               STAGE 1  panel construction
+├── 01b_new_lease_rents.R          STAGE 1b rents on new leases (needs raw_rev/)
 ├── 02_estimate.R                  STAGE 2  rent/price equations, divergence, IV
 ├── 02a_migration_granularity.R    STAGE 2a migration-disaggregation robustness
 ├── 02c_sa_additions.R             STAGE 2c dynamic rent equation, local projections
 ├── 02d_sa_tables.R                STAGE 2d appendix tables (C.2, C.3, E), Tables 1-2
-├── 03_figures.R                   STAGE 3  divergence figures, local projections
+├── 02f_new_lease_tests.R          STAGE 2f new-lease rents against the model (Appendix F)
+├── 03_figures.R                   STAGE 3  Figure 1, divergence figures, local projections
 ├── 03f_missing_figures.R          STAGE 3f APRA instruments, correlation-restriction test
 ├── 03g_cr_endpoints.R             STAGE 3g MCUB endpoints (optional; needs ivcrtest)
 ├── 04_model_matching.R            STAGE 4  model estimation by impulse-response matching
 ├── 04b_identification.R           STAGE 4b distance profiles and sensitivity
+├── 04c_inflation.R                STAGE 4c measured inflation (runs after the bootstrap)
 ├── 05_bootstrap.R                 STAGE 5  block bootstrap of the model, in 22 chunks
 ├── 05c_small_sample.R             STAGE 5c small-sample Monte Carlo
 ├── 05b_bootstrap_summary.R        STAGE 5b bootstrap intervals and figure bands
+├── 06_paper_figures.R             STAGE 6  redraws eight paper figures in one style (last)
 │
-│   standalone diagnostics (NOT in run_all.R; run by hand):
+│   run by hand (NOT in run_all.R):
+├── fetch_rent_reports.R           downloads the SA bond workbooks and NSW report PDFs
 ├── plot_migration_composition.R   NOM visa-share diagnostic figures
 ├── check_integration_plots.R      integrated-panel integrity figures
 │
 ├── PIPELINE_README.md
 ├── STRUCTURE.md                   (this file)
 │
-├── raw/        INPUTS  (you supply; treated as read-only)
-├── clean/      INTERMEDIATE  (written by stage 01, read by 02/02a/03)
+├── manuscript/ the paper (PDF of the current version; LaTeX source of June 2026)
+├── raw/        INPUTS  (committed; treated as read-only)
+├── raw_rev/    INPUTS  state bond reports for 01b (you supply; NOT committed)
+├── clean/      INTERMEDIATE  (written by stage 01, read by later stages)
+├── clean_rev/  INTERMEDIATE  (written by stage 01b, read by 02f)
 ├── output/     RESULTS  (tables, series, figures)
 └── logs/       per-run logs
 ```
 
 ## Naming convention
 
-Numbered scripts are pipeline stages run in order by `run_all.R`
-(`01`, `02`, `02a`, `02c`, `02d`, `03`, `03f`, `03g`, `04`, `04b`, and with
-`--bootstrap` also `05`, `05c` and `05b`). README.md maps each table and figure
-in the paper to its output file. The `a` suffix denotes a stage that depends on
+Numbered scripts are pipeline stages run by `run_all.R` (`01`, `01b`, `02`,
+`02a`, `02c`, `02d`, `02f`, `03`, `03f`, `03g`, `04`, `04b`, with `--bootstrap`
+also `05`, `05c` and `05b`, then `04c` and `06`). Two run out of numerical
+order: `04c` reads the bootstrap draws, so it follows `05b`, and `06` redraws
+figures that earlier stages also write, so it runs last. `01b` runs only when
+`raw_rev/` exists, and `02f` only when `clean_rev/new_lease_rents.csv` exists or
+`01b` will write it. README.md maps each table and figure in the paper to its
+output file. The `a` suffix denotes a stage that depends on
 and extends the same-numbered stage (`02a` reads the panel and reuses `02`'s
 inference machinery, but is logically a continuation of estimation). Unnumbered
 `.R` files are either sourced helpers (`00_setup.R`, `R/functions.R`) or hand-run
@@ -76,13 +89,11 @@ diagnostics not in the master run.
 > present (using `OUTDIR`, `F_OMAD`, `CITIES`) and fall back to standalone
 > definitions when run alone, writing to `output/` either way.
 
-> **Figure 1 is TikZ, not R.** The policy-transmission diagram (Figure 1) is
-> drawn natively in a `tikzpicture` inside the manuscript `.tex`. An earlier R
-> rendering (`figure1_transmission.R` → `output/figures/housing_paradox_*.png/pdf`)
-> duplicated it and has been removed from the pipeline: `03_figures.R` no longer
-> sources it, and the `targets` graph no longer tracks those outputs. If a copy
-> of `figure1_transmission.R` or the `housing_paradox_*` files remains in the
-> repo, they are stale and can be deleted.
+> **Figure 1 is drawn in R.** `03_figures.R` draws the transmission diagram
+> (Figure 1) with ggplot2 and needs no data. It writes
+> `output/fig_transmission.pdf`, which the paper includes, and a PNG preview.
+> The earlier `figure1_transmission.R` and the TikZ version in the `.tex` are
+> superseded; a copy of either is stale.
 
 ## raw/ — inputs
 
@@ -114,6 +125,23 @@ The three modern-API filenames are centralised in `00_setup.R` as `F_LEND`,
 > specific-group `F_OMAD`). See "Files deliberately NOT committed" in
 > `raw/README.md`. The committed input set is 14 files.
 
+## raw_rev/ — state bond reports (not committed)
+
+Rents on new leases (Online Appendix F) come from the bond reports of four
+state agencies, about 180 MB in all. They are not in the repository; README.md
+says where to download each. `01b_new_lease_rents.R` reads:
+
+| Folder | Source | Coverage |
+|------|---------------|-------------|
+| `raw_rev/nsw/dcj_xlsx/` | NSW DCJ Rent and Sales Report: rent tables (June 2017 on) and the time series "Rents, Trend March 1990 - June 2017, Metropolitan LGAs" | Greater Sydney, 1990 on |
+| `raw_rev/nsw/dcj_pdf/` | DCJ report PDFs, March 2008 to March 2017 (optional check; `fetch_rent_reports.R nsw`) | Greater Sydney |
+| `raw_rev/vic/` | Homes Victoria, quarterly median rents by LGA; optionally the Rental Report tables (check) | Metropolitan Melbourne, 1999 on |
+| `raw_rev/qld/` | Queensland RTA bond statistics | Five Greater Brisbane LGAs, 2012 on |
+| `raw_rev/sa/` | SA Private Rental Report, one workbook per quarter (`fetch_rent_reports.R sa`) | Metropolitan Adelaide, 2008 on |
+
+Without `raw_rev/`, `run_all.R` skips `01b`. It still runs `02f` if
+`clean_rev/new_lease_rents.csv` from an earlier `01b` run is present.
+
 ## clean/ — intermediates (stage 01 writes; later stages read)
 
 | File | Written by | Read by |
@@ -125,6 +153,14 @@ The three modern-API filenames are centralised in `00_setup.R` as `F_LEND`,
 `panel_combined.rds` is the single analysis panel. Stages 02c, 03f, 04 and 05
 also read the seasonally adjusted lending series from `F_LEND` in `raw/`; every
 other stage works from the panel.
+
+## clean_rev/ — new-lease rents (stage 01b writes; 02f reads)
+
+| File | Written by | Read by |
+|------|-----------|---------|
+| `new_lease_rents.csv` | 01b | 02f (one row per city and quarter: log change, seasonally adjusted change, index) |
+| `new_lease_cells.csv` | 01b | (cell-level medians, bonds and weights) |
+| `new_lease_checks.txt` | 01b | (coverage, weights, seasonality and source checks) |
 
 ## output/ — results
 
@@ -175,6 +211,7 @@ back the manuscript's "Disaggregating the migration flow" paragraph and Table
 ### Stage 03 — figures and local projections
 
 ```
+fig_transmission.pdf          fig_transmission.png       (Figure 1)
 local_projection_irf.csv      local_projection_irf.png
 lp_rent_lag_sensitivity.csv   fig_lp_rent_lag_sensitivity.png
 fig_divergence.png            fig_price_rent_gap.png
@@ -182,7 +219,14 @@ fig_real_rent.png             fig_rental_trajectories.png
 fig_rent_rolling_coef.png
 ```
 
-Figure 1 (transmission diagram) is TikZ in the `.tex`, not an R output.
+`fig_divergence.png` (Figure E.2) is redrawn by stage 06.
+
+### Stage 02f — rents on new leases (Online Appendix F)
+
+```
+new_lease_tests.txt     new_lease_lp.csv     new_lease_boot.csv
+fig_new_lease_lp.png    (Figure F.1)
+```
 
 ### Stages 02c and 02d — seasonally adjusted credit
 
@@ -225,6 +269,26 @@ model_small_sample.txt  model_small_sample.csv
 boot_summary.csv        boot_shares.csv            boot_counterfactual_draws.csv
 fig_model_fit.png       fig_model_counterfactual.png   (redrawn with bands)
 ```
+
+### Stage 04c — credit conditions and measured inflation (Section 6.6)
+
+```
+model_inflation.txt     model_inflation.csv        fig_model_inflation.png  (Figure 9)
+```
+
+### Stage 06 — the paper's figures in one style
+
+Redraws from saved results, at the size each prints in the paper (600 dpi):
+
+```
+fig_lp_irf_adjusted.png (Figure 5)     fig_model_fit.png (Figure 6)
+fig_model_profile.png (Figure 7)       fig_model_counterfactual.png (Figure 8)
+fig_lpiv_main.png (Figure D.1)         fig_cr_valid_range.png (Figure D.2)
+fig_lp_postimpact.png (Figure E.1)     fig_divergence.png (Figure E.2)
+```
+
+Stages 02c, 03, 03f, 04, 04b, 05c and 05b write older versions of these eight
+files, so 06 runs last.
 
 ### Stage 01 — optional diagnostics  (only if `BUILD_DIAGNOSTICS = TRUE`)
 
@@ -280,10 +344,14 @@ raw/ ──────────▶ 01_build_panel.R ──▶ clean/panel_co
 
 output/sa_B_omega.csv, sa_C_lp.csv ──▶ 04_model_matching.R ──▶ 04b_identification.R
 output/model_estimates.csv ──▶ 05_bootstrap.R ──▶ output/boot_b*.rds ──▶ 05c_small_sample.R ──▶ 05b_bootstrap_summary.R
+output/boot_b8_*.rds, model_*.csv ──▶ 04c_inflation.R
+raw_rev/ ──▶ 01b_new_lease_rents.R ──▶ clean_rev/new_lease_rents.csv ──▶ 02f_new_lease_tests.R (with clean/panel_combined.rds)
+output/ (saved results of 02, 02c, 03f, 04, 04b, 05) ──▶ 06_paper_figures.R   (last)
 ```
 
 `02_estimate.R` writes `rolling_financial_r2.csv`, which `03_figures.R` reads.
 Stage 04 needs the outputs of 02c, and stage 05 needs the outputs of 02c and 04.
+Stage 04c needs the block-8 bootstrap draws, and 06 needs every stage before it.
 Any stage can fail without stopping the later stages from starting;
 `run_all.R` reports per-stage status and exits non-zero if any failed. If a
 bootstrap chunk fails, it skips 05c and 05b and reports the failure.

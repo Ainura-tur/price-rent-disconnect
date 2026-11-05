@@ -19,10 +19,25 @@ summarise <- dplyr::summarise; summarize <- dplyr::summarize
 arrange   <- dplyr::arrange;   count     <- dplyr::count
 lag       <- dplyr::lag
 
+# boot_b<block>_FIRST_LAST.rds holds draws FIRST to LAST. The files must cover
+# 1 to N once each: a leftover test chunk (boot_b8_1_2.rds, which 05_bootstrap.R
+# writes when run without arguments, beside boot_b8_1_30.rds) would count draws
+# twice, so the script stops instead.
 load_block <- function(bl) {
   f <- list.files(OUTDIR, pattern = sprintf("^boot_b%d_\\d+_\\d+\\.rds$", bl), full.names = TRUE)
   if (!length(f)) return(NULL)
-  do.call(rbind, lapply(f, readRDS))
+  rg <- do.call(rbind, lapply(regmatches(basename(f), regexec("_(\\d+)_(\\d+)\\.rds$", basename(f))),
+                              function(m) as.integer(m[2:3])))
+  o <- order(rg[, 1], rg[, 2]); rg <- rg[o, , drop = FALSE]; f <- f[o]
+  if (rg[1, 1] != 1 || any(rg[-1, 1] != rg[-nrow(rg), 2] + 1))
+    stop("boot_b", bl, " files in ", OUTDIR, " overlap or leave a gap: ",
+         paste(basename(f), collapse = ", "),
+         ". Move any test chunk out of the folder, or rerun a missing one.")
+  B <- do.call(rbind, lapply(f, readRDS))
+  # 05_bootstrap.R drops a draw whose estimation fails, so a shortfall is not an error.
+  if (nrow(B) != rg[nrow(rg), 2])
+    warning("boot_b", bl, ": ", nrow(B), " draws, not ", rg[nrow(rg), 2], " (some draws failed)")
+  B
 }
 q90 <- function(x) quantile(x, c(0.05, 0.95), na.rm = TRUE)
 

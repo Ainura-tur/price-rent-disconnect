@@ -22,7 +22,7 @@ credit, NOM by visa) were added after the consolidation; see "Data sources" and
 | `03_figures.R`           | `05_plot_divergence.R` + `07_local_projections.R` |
 | `run_all.R`              | `00_master.R` |
 | `verify_raw.R`           | read-only pre-run check: confirms `raw/` holds the 14 expected inputs under their canonical names; flags rename-needed / missing / stray files. Gated by `run_all.R` and mirrored by the `targets` input check |
-| `figure1_transmission.R` | **removed** — Figure 1 is drawn natively in TikZ in the manuscript `.tex`; the R rendering was redundant and is no longer part of the pipeline |
+| `figure1_transmission.R` | **removed** — Figure 1 is now drawn by `03_figures.R` (`output/fig_transmission.pdf`) |
 | `plot_migration_composition.R` | standalone diagnostic figures for the NOM visa shares (not in `run_all.R`) |
 | `check_integration_plots.R`    | standalone integrity figures for the integrated panel (not in `run_all.R`) |
 

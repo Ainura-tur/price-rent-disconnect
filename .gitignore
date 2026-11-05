@@ -3,6 +3,7 @@ _targets/
 
 # --- regenerated artefacts (rebuilt by the pipeline; do not commit) ----------
 clean/
+clean_rev/
 output/
 output_old/
 logs/
@@ -39,5 +40,10 @@ manuscript/*.fdb_latexmk
 raw/ABS_OMAD_VISA,+*AUS.Q.csv
 raw/f01dhist.xls
 raw/560114.xlsx
+
+# The state bond reports behind the new-lease rents (01b_new_lease_rents.R) are
+# not committed: about 180 MB, downloaded from the four state agencies listed in
+# README.md (fetch_rent_reports.R gets the SA workbooks and the NSW PDFs).
+raw_rev/
 
 # If you add a source whose terms forbid redistribution, ignore that file here too.

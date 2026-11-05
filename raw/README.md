@@ -48,6 +48,13 @@ DSD-encoded names are the volatile part on a data refresh.
 | `bis_dp_search_export_20260615-045639.csv` | BIS | Residential Property Prices — Australia (Sydney series), BIS Data Portal export | BIS terms of permitted use |
 | `panel_main.csv` | own construction | base paper panel into which reconstructed series are swapped | this repository (MIT) |
 
+## Rents on new leases (`raw_rev/`, not committed)
+
+`01b_new_lease_rents.R` reads the bond reports of four state agencies from
+`raw_rev/`, not from `raw/`. They are not committed (about 180 MB). The main
+README.md lists each source and where to download it; `fetch_rent_reports.R`
+downloads the South Australian workbooks and the NSW report PDFs.
+
 ## Files deliberately NOT committed
 
 Three files may appear in a working `raw/` folder but are **not pipeline inputs**
