@@ -37,7 +37,7 @@ project-root/
 ├── 02_estimate.R                  STAGE 2  rent/price equations, divergence, IV
 ├── 02a_migration_granularity.R    STAGE 2a migration-disaggregation robustness
 ├── 02c_sa_additions.R             STAGE 2c dynamic rent equation, local projections
-├── 02d_sa_tables.R                STAGE 2d appendix tables (C.2, C.3, E), Tables 1-2
+├── 02d_sa_tables.R                STAGE 2d appendix tables (C.2, C.3, E, E.1), Tables 1-2
 ├── 02f_new_lease_tests.R          STAGE 2f new-lease rents against the model (Appendix F)
 ├── 03_figures.R                   STAGE 3  Figure 1, divergence figures, local projections
 ├── 03f_missing_figures.R          STAGE 3f APRA instruments, correlation-restriction test
@@ -150,9 +150,9 @@ Without `raw_rev/`, `run_all.R` skips `01b` and runs `02f` on the committed
 | `panel_combined.rds` | 01 | 02, 02a, 02c, 02d, 03, 03f, 04, 05 |
 | `panel_combined.csv` | 01 | (inspection; also copied to `output/`) |
 
-`panel_combined.rds` is the single analysis panel. Stages 02c, 03f, 04 and 05
-also read the seasonally adjusted lending series from `F_LEND` in `raw/`; every
-other stage works from the panel.
+`panel_combined.rds` is the single analysis panel. Stages 02c, 03f, 04 and 05,
+and the unit-root block of 02d, also read the seasonally adjusted lending
+series from `F_LEND` in `raw/`; every other stage works from the panel.
 
 ## clean_rev/ — new-lease rents (stage 01b writes; 02f reads)
 
@@ -241,7 +241,7 @@ fig_lp_irf_adjusted.png                 fig_lp_postimpact.png
 
 sa2_S1_stacked.txt  sa2_S2_breaks.txt   sa2_S3_granger.txt sa2_S4_seasonal.txt
 sa2_S5_sydney_cities.txt                sa2_S6_cash.txt    sa2_S7_reclass.txt
-sa2_S8_summary.txt
+sa2_S8_summary.txt  sa2_S9_unitroot.txt (Table E.1)
 ```
 
 ### Stages 03f and 03g — APRA instruments

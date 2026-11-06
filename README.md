@@ -58,7 +58,7 @@ except `01b`, `02f` and `03g`. It does not run the bootstrap, the Monte Carlo,
 | 2 | `02_estimate.R` | Tables 3–4, Table C.1, rolling partial R² and rolling rent coefficients, most Online Appendix E checks |
 | 2a | `02a_migration_granularity.R` | Migration-disaggregation robustness |
 | 2c | `02c_sa_additions.R` | Price momentum (Table 4), dynamic rent equation (ω), local projections (Figure 5, Figure E.1), channel test, owner-occupier credit, pre-splice sample |
-| 2d | `02d_sa_tables.R` | Tables 1–2, Tables C.2–C.3, stacked slope tests, seasonal-adjustment checks, Sydney and city-by-city changes, cash-rate interaction and level |
+| 2d | `02d_sa_tables.R` | Tables 1–2, Tables C.2–C.3, stacked slope tests, seasonal-adjustment checks, Sydney and city-by-city changes, cash-rate interaction and level, unit-root tests (Table E.1) |
 | 2f | `02f_new_lease_tests.R` | Rents on new leases against the model: Tables F.1–F.2 and Figure F.1 (Online Appendix F) |
 | 3 | `03_figures.R` | Figure 1 (`fig_transmission.pdf`) and Figures 2–4 |
 | 3f | `03f_missing_figures.R` | APRA-instrumented local projections and the correlation-restriction test: Table D.1, Figures D.1–D.2 |
@@ -103,6 +103,7 @@ Outputs go to `output/`. Each script's header lists the files it writes.
 | Table D.1, Figures D.1–D.2 | `lpiv_apra.csv`, `fig_lpiv_main.png`, `cr_valid_ranges.csv`, `fig_cr_valid_range.png`, `cr_mcub_endpoints.csv` |
 | Online Appendix E | `sa2_S4`–`sa2_S7`, `sa_F_oo.txt`, `sa_H_presplice.txt`, `robust_*.txt`, `alt_price_spline.txt`, `mech_*.txt`, `nlin_*.txt` |
 | Figure E.2 | `rolling_financial_r2.csv`, `fig_divergence.png` |
+| Table E.1, and the autocorrelations in Section 4.3 | `sa2_S9_unitroot.txt` |
 | Online Appendix F: Tables F.1–F.2, Figure F.1 | `new_lease_tests.txt`, `new_lease_lp.csv`, `new_lease_boot.csv`, `fig_new_lease_lp.png`; the index itself in `clean_rev/new_lease_rents.csv` |
 
 The files for Figures 5–8, D.1–D.2 and E.1–E.2 are the versions that
@@ -113,7 +114,7 @@ The files for Figures 5–8, D.1–D.2 and E.1–E.2 are the versions that
 R (≥ 4.1) with `dplyr`, `tidyr`, `readr`, `readxl`, `zoo`, `purrr`, `plm`,
 `lmtest`, `sandwich`, `car`, `splines`, `ggplot2` and `parallel` (base R). The
 final run used R 4.5.2 on Windows 11. A full run with R 4.5.3 on Linux,
-bootstrap included, reproduces Tables 1–6, C.1–C.3, D.1 and F.1–F.2 and the
+bootstrap included, reproduces Tables 1–6, C.1–C.3, D.1, E.1 and F.1–F.2 and the
 bootstrap results in Sections 6.3–6.6, with two small exceptions.
 The data pin down κ and η only weakly (the ridge in Figure 7), so a few
 bootstrap and Monte Carlo estimates stop at different points on the ridge on

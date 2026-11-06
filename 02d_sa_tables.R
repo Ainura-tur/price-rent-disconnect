@@ -9,8 +9,10 @@
 #   S6  Cash-rate interaction and cash-rate level (Appendix E, Section 5.6.4)
 #   S7  Dropping the 2015:Q3-2016:Q2 reclassification quarters (Appendix E)
 #   S8  Summary statistics (Tables 1 and 2)
+#   S9  Unit-root tests (Table E.1) and first-order autocorrelations (Section 4.3)
 #
-# Reads clean/panel_combined.rds (01_build_panel.R). Writes output/sa2_*.
+# Reads clean/panel_combined.rds (01_build_panel.R) and, for S9, the lending
+# series in F_LEND (raw/). Writes output/sa2_*.
 # Standard errors: Driscoll-Kraay (HC0, maxlag 4) unless stated.
 # =============================================================================
 
@@ -243,4 +245,80 @@ S8 <- list(
               wpi_mean = mean(wpi, na.rm = TRUE), n = n(), .groups = "drop"))
 cat("\n== S8 summary statistics ==\n"); print(S8, digits = 4)
 out(S8, "S8_summary.txt")
+
+# ---- S9. Unit-root tests (Table E.1) ------------------------------------------
+# W is the panel statistic of Im, Pesaran and Shin (2003), from plm::purtest
+# (test "ips"); it is standard normal under the null, and large negative values
+# reject. Cities counts the cities whose own ADF test rejects at 5 percent
+# (MacKinnon p-values). Lags run from 0 to 4 and are chosen city by city by AIC
+# or SIC. Every test has a constant, and the level tests of the five log series
+# also have a linear trend. The cash rate is one national series, so its row is
+# a single ADF t statistic. Window 2006:Q3 to TARGET_END; tightness and the
+# one-quarter ratio end where their data end. Investor credit and the investor
+# share are seasonally adjusted.
+lend_sa <- read_csv(F_LEND, show_col_types = FALSE) |>
+  filter(Measure == "Value", `Loan Purpose` == "Total dwellings excluding refinancing",
+         `Housing Purpose` %in% c("Investor", "Owner occupier"),
+         `Adjustment Type` == "Seasonally Adjusted", Region %in% names(STATE2CITY)) |>
+  mutate(quarter = as.yearqtr(gsub("-Q", " Q", TIME_PERIOD)), v = as.numeric(OBS_VALUE),
+         city = recode(Region, !!!STATE2CITY)) |>
+  distinct(city, quarter, `Housing Purpose`, .keep_all = TRUE) |>
+  tidyr::pivot_wider(id_cols = c(city, quarter), names_from = `Housing Purpose`, values_from = v)
+ur_d <- d |> left_join(lend_sa, by = c("city", "quarter")) |>
+  filter(quarter >= as.yearqtr("2006 Q3"), quarter <= TARGET_END) |>
+  arrange(city, quarter) |>
+  transmute(city, quarter, l_rent = log(rents), l_price = log(prop_price), l_wpi = log(wpi),
+            l_emp = log(employment), l_inv = log(inv_commit_sa),
+            inv_share = Investor / (Investor + `Owner occupier`), cash = cash_rate,
+            tight = tightness, tight_1q = net_migration / dwell_total,   # 4q and 1q ratios
+            gap = log(price_rent))
+ur_rows <- c(l_rent = "Log rent", l_price = "Log dwelling price", l_wpi = "Log wages (WPI)",
+             l_emp = "Log employment", l_inv = "Log investor credit", inv_share = "Investor share",
+             cash = "Cash rate", tight = "Tightness", tight_1q = "Tightness, one quarter",
+             gap = "Price-rent gap")
+ur_trend <- c("l_rent", "l_price", "l_wpi", "l_emp", "l_inv")
+stars <- function(p) ifelse(p < 0.01, "***", ifelse(p < 0.05, "**", ifelse(p < 0.10, "*", "")))
+ur_cell <- function(x, exo, crit, national) {
+  r <- purtest(x, test = "ips", exo = exo, lags = crit, pmax = 4)
+  p_city <- sapply(r$idres, function(z) unname(z$p.trho))
+  if (national) {   # one series: its ADF t statistic and MacKinnon p-value
+    t1 <- unname(r$idres[[1]]$trho)
+    return(c(stat = sprintf("%.2f%s", t1, stars(p_city[1])), cities = "-"))
+  }
+  W <- unname(r$statistic$statistic)
+  c(stat = sprintf("%.2f%s", W, stars(pnorm(W))), cities = as.character(sum(p_city < 0.05)))
+}
+E1 <- do.call(rbind, lapply(names(ur_rows), function(v) {
+  s <- ur_d |> select(city, quarter, x = all_of(v)) |> filter(is.finite(x)) |>
+    group_by(city) |> mutate(dx = x - L(x)) |> ungroup()
+  national <- v == "cash"
+  if (national) s <- filter(s, city == s$city[1])
+  lv <- pdata.frame(as.data.frame(s), index = c("city", "quarter"))
+  df <- pdata.frame(as.data.frame(filter(s, is.finite(dx))), index = c("city", "quarter"))
+  ex <- if (v %in% ur_trend) "trend" else "intercept"
+  cells <- c(ur_cell(lv$x, ex, "AIC", national), ur_cell(df$dx, "intercept", "AIC", national),
+             ur_cell(lv$x, ex, "SIC", national), ur_cell(df$dx, "intercept", "SIC", national))
+  data.frame(variable = ur_rows[[v]], trend = if (v %in% ur_trend) "Yes" else "No",
+             aic_level_W = cells[1], aic_level_cities = cells[2],
+             aic_diff_W = cells[3], aic_diff_cities = cells[4],
+             sic_level_W = cells[5], sic_level_cities = cells[6],
+             sic_diff_W = cells[7], sic_diff_cities = cells[8],
+             from = format(min(s$quarter)), to = format(max(s$quarter)))
+}))
+rownames(E1) <- NULL
+
+# Pooled first-order autocorrelations cited in Section 4.3: the correlation of
+# a series with its own lag, after removing each city's mean.
+ac1 <- function(x, city) {
+  l <- ave(x, city, FUN = function(u) c(NA, head(u, -1)))
+  ok <- is.finite(x) & is.finite(l)
+  cor(x[ok] - ave(x[ok], city[ok]), l[ok] - ave(l[ok], city[ok]))
+}
+dr_ur <- ave(ur_d$l_rent, ur_d$city, FUN = function(u) c(NA, diff(u)))
+S9 <- list(table_E1 = E1,
+           note = "Stars: p < 0.10 *, < 0.05 **, < 0.01 ***; W against the standard normal, the cash rate against MacKinnon (1996).",
+           autocorrelation = c(rent_growth = ac1(dr_ur, ur_d$city), tightness = ac1(ur_d$tight, ur_d$city),
+                               tightness_one_quarter = ac1(ur_d$tight_1q, ur_d$city)))
+cat("\n== S9 unit-root tests (Table E.1) ==\n"); print(S9, digits = 3)
+out(S9, "S9_unitroot.txt")
 cat("\nDone.\n")

@@ -12,7 +12,7 @@
 #   02c_sa_additions.R  price momentum, dynamic rent equation (omega), local
 #                    projections (Figure 5, Figure E.1), channel test, checks
 #   02d_sa_tables.R  Tables C.2-C.3, stacked tests, seasonal, Sydney, cash rate,
-#                    Tables 1-2 summary statistics
+#                    Tables 1-2 summary statistics, Table E.1 unit-root tests
 #   02f_new_lease_tests.R  new-lease rents against the model (Tables F.1-F.2,
 #                    Figure F.1); reads clean_rev/new_lease_rents.csv
 #                    (committed; 01b rebuilds it)
