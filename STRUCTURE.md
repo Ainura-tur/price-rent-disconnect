@@ -150,9 +150,10 @@ Without `raw_rev/`, `run_all.R` skips `01b` and runs `02f` on the committed
 | `panel_combined.rds` | 01 | 02, 02a, 02c, 02d, 03, 03f, 04, 05 |
 | `panel_combined.csv` | 01 | (inspection; also copied to `output/`) |
 
-`panel_combined.rds` is the single analysis panel. Stages 02c, 03f, 04 and 05,
-and the unit-root block of 02d, also read the seasonally adjusted lending
-series from `F_LEND` in `raw/`; every other stage works from the panel.
+`panel_combined.rds` is the single analysis panel. Stages 02c, 03f, 04 and 05
+also read the seasonally adjusted lending series from `F_LEND` in `raw/`, and
+so does 02d for the investor share (Table 2 and Table E.1); every other stage
+works from the panel.
 
 ## clean_rev/ — new-lease rents (stage 01b writes; 02f reads)
 

@@ -11,8 +11,8 @@
 #   S8  Summary statistics (Tables 1 and 2)
 #   S9  Unit-root tests (Table E.1) and first-order autocorrelations (Section 4.3)
 #
-# Reads clean/panel_combined.rds (01_build_panel.R) and, for S9, the lending
-# series in F_LEND (raw/). Writes output/sa2_*.
+# Reads clean/panel_combined.rds (01_build_panel.R) and, for the investor share
+# in S8 and S9, the lending series in F_LEND (raw/). Writes output/sa2_*.
 # Standard errors: Driscoll-Kraay (HC0, maxlag 4) unless stated.
 # =============================================================================
 
@@ -224,13 +224,30 @@ S7 <- row(fe(as.formula(paste("dp ~ di*post +", ctl_p(FALSE))), filter(est, !qua
 cat("\n== S7 without 2015:Q3-2016:Q2 ==\n"); print(S7, digits = 3)
 out(S7, "S7_reclass.txt")
 
+# ---- Investor share of new lending (Table 2 and Table E.1) ---------------------
+# Seasonally adjusted investor commitments over investor plus owner-occupier
+# commitments, by state, from F_LEND. dsh is its quarterly change.
+lend_sa <- read_csv(F_LEND, show_col_types = FALSE) |>
+  filter(Measure == "Value", `Loan Purpose` == "Total dwellings excluding refinancing",
+         `Housing Purpose` %in% c("Investor", "Owner occupier"),
+         `Adjustment Type` == "Seasonally Adjusted", Region %in% names(STATE2CITY)) |>
+  mutate(quarter = as.yearqtr(gsub("-Q", " Q", TIME_PERIOD)), v = as.numeric(OBS_VALUE),
+         city = recode(Region, !!!STATE2CITY)) |>
+  distinct(city, quarter, `Housing Purpose`, .keep_all = TRUE) |>
+  tidyr::pivot_wider(id_cols = c(city, quarter), names_from = `Housing Purpose`, values_from = v)
+shr <- d |> select(city, quarter) |> left_join(lend_sa, by = c("city", "quarter")) |>
+  arrange(city, quarter) |> group_by(city) |>
+  mutate(inv_share = Investor / (Investor + `Owner occupier`), dsh = inv_share - L(inv_share)) |>
+  ungroup() |> select(city, quarter, inv_share, dsh)
+
 # ---- S8. Summary statistics (Tables 1 and 2) -----------------------------------
-win <- d |> filter(quarter >= as.yearqtr("2006 Q3"), quarter <= TARGET_END)
+win <- d |> left_join(shr, by = c("city", "quarter")) |>
+  filter(quarter >= as.yearqtr("2006 Q3"), quarter <= TARGET_END)
 t2 <- function(v, df = win) { x <- df[[v]][is.finite(df[[v]])]
   c(N = length(x), mean = mean(x), sd = sd(x), min = min(x), max = max(x)) }
 S8 <- list(
   table2 = rbind(rent = t2("dr"), price = t2("dp"), credit_sa = t2("di"), credit_unadj = t2("du"),
-                 wpi = t2("dw"), employment = t2("dn"), cash = t2("dc"),
+                 inv_share = t2("dsh"), wpi = t2("dw"), employment = t2("dn"), cash = t2("dc"),
                  tightness = t2("tightness", filter(win, is.finite(tight_l1)) |> mutate(tightness = tight_l1)),
                  gap = t2("gap", win |> mutate(gap = log(price_rent)))),   # level series
   table1 = win |> arrange(city, quarter) |> group_by(city) |>
@@ -256,20 +273,12 @@ out(S8, "S8_summary.txt")
 # a single ADF t statistic. Window 2006:Q3 to TARGET_END; tightness and the
 # one-quarter ratio end where their data end. Investor credit and the investor
 # share are seasonally adjusted.
-lend_sa <- read_csv(F_LEND, show_col_types = FALSE) |>
-  filter(Measure == "Value", `Loan Purpose` == "Total dwellings excluding refinancing",
-         `Housing Purpose` %in% c("Investor", "Owner occupier"),
-         `Adjustment Type` == "Seasonally Adjusted", Region %in% names(STATE2CITY)) |>
-  mutate(quarter = as.yearqtr(gsub("-Q", " Q", TIME_PERIOD)), v = as.numeric(OBS_VALUE),
-         city = recode(Region, !!!STATE2CITY)) |>
-  distinct(city, quarter, `Housing Purpose`, .keep_all = TRUE) |>
-  tidyr::pivot_wider(id_cols = c(city, quarter), names_from = `Housing Purpose`, values_from = v)
-ur_d <- d |> left_join(lend_sa, by = c("city", "quarter")) |>
+ur_d <- d |> left_join(shr, by = c("city", "quarter")) |>
   filter(quarter >= as.yearqtr("2006 Q3"), quarter <= TARGET_END) |>
   arrange(city, quarter) |>
   transmute(city, quarter, l_rent = log(rents), l_price = log(prop_price), l_wpi = log(wpi),
             l_emp = log(employment), l_inv = log(inv_commit_sa),
-            inv_share = Investor / (Investor + `Owner occupier`), cash = cash_rate,
+            inv_share, cash = cash_rate,
             tight = tightness, tight_1q = net_migration / dwell_total,   # 4q and 1q ratios
             gap = log(price_rent))
 ur_rows <- c(l_rent = "Log rent", l_price = "Log dwelling price", l_wpi = "Log wages (WPI)",
