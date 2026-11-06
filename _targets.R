@@ -34,7 +34,7 @@ tar_source("R/functions.R")   # stage wrappers + file-tracking helpers
 
 tar_option_set(
   packages = c("dplyr","tidyr","readr","readxl","zoo","purrr",
-               "plm","lmtest","sandwich","fixest","splines","ggplot2"),
+               "plm","lmtest","sandwich","car","splines","ggplot2"),
   format   = "rds"
 )
 
@@ -51,6 +51,10 @@ list(
   tar_target(script_02,     "02_estimate.R",              format = "file"),
   tar_target(script_02a,    "02a_migration_granularity.R",format = "file"),
   tar_target(script_03,     "03_figures.R",               format = "file"),
+  tar_target(script_02c,    "02c_sa_additions.R",         format = "file"),
+  tar_target(script_02d,    "02d_sa_tables.R",            format = "file"),
+  tar_target(script_03f,    "03f_missing_figures.R",      format = "file"),
+  tar_target(script_04,     "04_model_matching.R",        format = "file"),
 
   # --- Stage 01: build the panel ---------------------------------------------
   # Depends on the raw inputs, 00_setup.R, and its own script. Returns the path
@@ -80,6 +84,57 @@ list(
     run_stage("02a_migration_granularity.R",
               inputs   = c(panel_combined, setup_file, script_02a),
               produces = granular_output_files()),
+    format = "file"
+  ),
+
+  # --- Stage 02c: dynamic rent equation, local projections, channel test -----
+  tar_target(
+    sa_additions,
+    run_stage("02c_sa_additions.R",
+              inputs   = c(panel_combined, setup_file, script_02c),
+              produces = file.path("output", c("sa_C_lp.csv", "sa_B_omega.csv",
+                                               "fig_lp_irf_adjusted.png", "fig_lp_postimpact.png"))),
+    format = "file"
+  ),
+
+  # --- Stage 02d: appendix tables on seasonally adjusted credit ---------------
+  tar_target(
+    sa_tables,
+    run_stage("02d_sa_tables.R",
+              inputs   = c(panel_combined, setup_file, script_02d),
+              produces = file.path("output", c("sa2_S2_breaks.txt", "sa2_S3_granger.txt"))),
+    format = "file"
+  ),
+
+  # --- Stage 03f: APRA instruments and the correlation-restriction test -------
+  tar_target(
+    apra_iv,
+    run_stage("03f_missing_figures.R",
+              inputs   = c(panel_combined, setup_file, script_03f),
+              produces = file.path("output", c("lpiv_apra.csv", "fig_lpiv_main.png",
+                                               "fig_cr_valid_range.png"))),
+    format = "file"
+  ),
+
+  # --- Stage 04: model estimation by impulse-response matching ----------------
+  # The block bootstrap (05_bootstrap.R, 05b_bootstrap_summary.R) takes several
+  # hours and is run by `Rscript run_all.R --bootstrap`, not by this graph.
+  tar_target(
+    model,
+    run_stage("04_model_matching.R",
+              inputs   = c(sa_additions, setup_file, script_04),
+              produces = file.path("output", c("model_estimates.csv", "model_decomposition.csv",
+                                               "model_counterfactual.csv", "fig_model_fit.png",
+                                               "fig_model_counterfactual.png"))),
+    format = "file"
+  ),
+  tar_target(script_04b, "04b_identification.R", format = "file"),
+  tar_target(
+    model_ident,
+    run_stage("04b_identification.R",
+              inputs   = c(model, script_04b),
+              produces = file.path("output", c("model_profile.csv", "model_sensitivity.csv",
+                                               "fig_model_profile.png"))),
     format = "file"
   ),
 

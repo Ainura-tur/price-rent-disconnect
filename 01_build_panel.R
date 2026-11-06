@@ -186,6 +186,22 @@ inv_commit <- read_csv(f_lend, show_col_types = FALSE) |>
   transmute(city, quarter, inv_commit) |>
   arrange(city, quarter)
 
+# Seasonally adjusted commitments: the credit measure used in every estimate
+# reported in the paper. inv_commit (Original) is kept for the robustness checks
+# that compare the two series.
+inv_commit_sa <- read_csv(f_lend, show_col_types = FALSE) |>
+  filter(Measure == "Value", `Housing Purpose` == "Investor",
+         `Loan Purpose` == "Total dwellings excluding refinancing",
+         `Adjustment Type` == "Seasonally Adjusted", Region %in% names(STATE2CITY)) |>
+  mutate(city = recode(Region, !!!STATE2CITY),
+         quarter = as.yearqtr(gsub("-Q", " Q", TIME_PERIOD)),
+         inv_commit_sa = as.numeric(OBS_VALUE)) |>
+  filter(city %in% CITIES, !is.na(quarter), !is.na(inv_commit_sa)) |>
+  distinct(city, quarter, .keep_all = TRUE) |>
+  transmute(city, quarter, inv_commit_sa)
+inv_commit <- inv_commit |> distinct(city, quarter, .keep_all = TRUE) |>
+  left_join(inv_commit_sa, by = c("city", "quarter"))
+
 stopifnot(setequal(unique(inv_commit$city), CITIES))   # fail if a state is missing
 message("inv_commit (LEND_HOUSING): ", format(min(inv_commit$quarter)), " to ",
         format(max(inv_commit$quarter)))
@@ -328,6 +344,26 @@ panel <- panel |> left_join(dwell_new, by = c("city","quarter")) |>
          dwell_private = coalesce(dwell_private_new, dwell_private),
          dwell_public = coalesce(dwell_public_new, dwell_public)) |>
   select(-dwell_total_new, -dwell_private_new, -dwell_public_new)
+
+# Wage price index (replace the panel's series with 6345.0 by the quarter each
+# value describes). The legacy panel_main.csv holds every WPI value one quarter
+# early: its value for quarter t is the ABS figure for t+1, in all five cities
+# from 2006:Q3 to 2024:Q3. Reading 6345.0 directly fixes the dating and also the
+# 2024:Q3-Q4 join, where chaining onto the early series counted one quarter's
+# growth twice. Index base (2008-09 = 100) is unchanged.
+WPI_IDS <- c(Sydney = "A2599619A", Melbourne = "A2608929K", Brisbane = "A2600949X",
+             Adelaide = "A2610259A", Perth = "A2607599L")
+wpi_raw <- read_excel(file.path(RAW, "634502b.xlsx"), sheet = "Data1", col_names = FALSE)
+wpi_ids <- as.character(unlist(wpi_raw[10, ]))
+wpi_new <- bind_rows(lapply(names(WPI_IDS), function(c) {
+  j <- match(WPI_IDS[[c]], wpi_ids); stopifnot(!is.na(j))
+  tibble(city = c, date = wpi_raw[[1]], wpi_new = as.numeric(wpi_raw[[j]])) |>
+    slice(11:n()) |>
+    mutate(quarter = as.yearqtr(as.Date(as.numeric(date), origin = "1899-12-30"))) |>
+    filter(!is.na(quarter), !is.na(wpi_new)) |> select(city, quarter, wpi_new)
+}))
+panel <- panel |> left_join(wpi_new, by = c("city","quarter")) |>
+  mutate(wpi = coalesce(wpi_new, wpi)) |> select(-wpi_new)
 
 # Investor lending (NEW column for the price equation; LEND_HOUSING, built in A3).
 panel <- panel |> left_join(inv_commit, by = c("city","quarter"))

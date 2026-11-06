@@ -1,3 +1,8 @@
+> **Note.** This document describes the original four-stage pipeline. The
+> current pipeline adds stages 02c–05c; see README.md for the full list and for
+> the file behind each table and figure. All estimates now use seasonally
+> adjusted investor credit.
+
 # Consolidated pipeline
 
 Nine numbered scripts reduced to four stages plus a shared setup file. Same
@@ -16,8 +21,8 @@ credit, NOM by visa) were added after the consolidation; see "Data sources" and
 | `02a_migration_granularity.R` | migration-disaggregation robustness (numerator horse-race, overseas/interstate wedge + leave-one-city-out, price placebo); reads the panel from `01`, reuses the DK machinery; wired into `run_all.R` after `02` |
 | `03_figures.R`           | `05_plot_divergence.R` + `07_local_projections.R` |
 | `run_all.R`              | `00_master.R` |
-| `verify_raw.R`           | read-only pre-run check: confirms `raw/` holds the 13 expected inputs under their canonical names; flags rename-needed / missing / stray files. Gated by `run_all.R` and mirrored by the `targets` input check |
-| `figure1_transmission.R` | **removed** — Figure 1 is drawn natively in TikZ in the manuscript `.tex`; the R rendering was redundant and is no longer part of the pipeline |
+| `verify_raw.R`           | read-only pre-run check: confirms `raw/` holds the 14 expected inputs under their canonical names; flags rename-needed / missing / stray files. Gated by `run_all.R` and mirrored by the `targets` input check |
+| `figure1_transmission.R` | **removed** — Figure 1 is now drawn by `03_figures.R` (`output/fig_transmission.pdf`) |
 | `plot_migration_composition.R` | standalone diagnostic figures for the NOM visa shares (not in `run_all.R`) |
 | `check_integration_plots.R`    | standalone integrity figures for the integrated panel (not in `run_all.R`) |
 

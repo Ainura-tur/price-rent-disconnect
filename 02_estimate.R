@@ -29,7 +29,8 @@ summarise <- dplyr::summarise; summarize <- dplyr::summarize
 arrange <- dplyr::arrange;     count     <- dplyr::count;  lag <- dplyr::lag
 
 source("00_setup.R")
-library(plm); library(lmtest); library(sandwich); library(fixest)
+library(plm); library(lmtest); library(sandwich)
+HAS_FIXEST <- requireNamespace("fixest", quietly = TRUE)   # only for the superseded Bartik IV (section 5)
 
 panel <- readRDS(file.path(CLEAN, "panel_combined.rds")) |>
   arrange(city, quarter) |> mutate(qdate = as.numeric(quarter))
@@ -49,7 +50,7 @@ panel <- panel |>
 # Logs for the I(1) index levels; tightness/cash/shares enter as is.
 d <- panel |>
   mutate(l_rent = log(rents), l_price = log(prop_price), l_wpi = log(wpi),
-         l_emp = log(employment), l_inv = log(inv_commit), l_pr_gap = log(price_rent))
+         l_emp = log(employment), l_inv = log(inv_commit_sa), l_pr_gap = log(price_rent))  # seasonally adjusted credit, as in the paper
 P <- pdata.frame(d, index = c("city","quarter"))
 
 save_txt <- function(obj, name) capture.output(print(obj), file = file.path(OUTDIR, name))
@@ -180,6 +181,8 @@ cat("\n--- Wald: investor-demand interaction zero ---\n")
 cat("PRICE eqn (expect REJECT):\n");      print(waldtest(price_r0, price_div, vcov = dk_vcov))
 cat("RENT eqn (expect FAIL to reject):\n"); print(waldtest(rent_r0,  rent_div,  vcov = dk_vcov))
 
+if (HAS_FIXEST) {   # Bartik IV: superseded by the APRA instruments (03f); needs fixest
+library(fixest)
 # =============================================================================
 # 5. BARTIK / SHIFT-SHARE IV  (robustness, not headline)
 # =============================================================================
@@ -227,6 +230,8 @@ print(summary(iv_price_d2_adj)); cat("First-stage F (adj shift):\n"); print(fits
 cat("\nNOTE: the D2 shift is the externally valid instrument, but with five near-",
     "uniform pre-period shares the first-stage F is the binding constraint; report",
     "it alongside the leave-one-out version, not as a stronger headline.\n")
+
+} else cat("\nfixest not installed: skipping the superseded Bartik IV (section 5).\n")
 
 # =============================================================================
 # 6. ROLLING INVESTOR-DEMAND PARTIAL R^2  (the divergence figure's input)
@@ -367,38 +372,43 @@ if (!coint_done) {
       "'lagged price-rent gap as a level control' rather than error correction.\n")
 }
 
-## 7.4 Wild cluster bootstrap on the divergence interaction (5 clusters) ------
-## DK/cluster SEs with N=5 are small-sample. Wild cluster bootstrap-t (Rademacher
-## weights, resampled at the city level) gives a more honest p-value for the
-## headline interaction. With only 5 clusters even this is fragile; report it as
-## a frank robustness check, not a fix. Uses fwildclusterboot if present.
-cat("\n--- 7.4 Wild cluster bootstrap, divergence interaction (5 clusters) ---\n")
-if (requireNamespace("fwildclusterboot", quietly = TRUE)) {
-  res <- try({
-    dwb <- d |> arrange(city, quarter) |> group_by(city) |>
-      mutate(d_lprice = l_price - dplyr::lag(l_price), d_linv = l_inv - dplyr::lag(l_inv),
-             d_cash = cash_rate - dplyr::lag(cash_rate), tight_l1 = dplyr::lag(tightness),
-             d_wpi = l_wpi - dplyr::lag(l_wpi), inv_post = d_linv * post) |> ungroup()
-    fit <- lm(d_lprice ~ d_linv + inv_post + d_cash + tight_l1 + d_wpi + factor(city),
-              data = dwb)
-    # Webb (6-point) weights, NOT Rademacher: with 5 clusters Rademacher gives
-    # only 2^5 = 32 enumerated draws and 2^(5-1) = 16 distinct p-values, so a
-    # reported p of 0.0000 is an enumeration artifact, not precision. Webb draws
-    # from 6 points (6^5 = 7776 combinations), which is the standard fix for
-    # very few clusters; the p-value below is interpretable as continuous.
-    bt <- fwildclusterboot::boottest(fit, clustid = "city", param = "inv_post",
-                                     B = 9999, type = "webb")
-    cat(sprintf("  inv:post wild-cluster p = %.4f (B=9999, Webb weights, 5 clusters)\n",
-                bt$p_val))
-    robust(summary(bt), "robust_wildboot.txt")
-  }, silent = TRUE)
-  if (inherits(res,"try-error")) cat("  fwildclusterboot present but bootstrap failed:\n  ",
-                                     conditionMessage(attr(res,"condition")), "\n")
-} else {
-  cat("  fwildclusterboot not installed; skipping. install.packages('fwildclusterboot').\n")
-  cat("  Meanwhile: state plainly in the paper that ALL standard errors inherit",
-      "the five-cluster limitation, not only the IV.\n")
+## 7.4 Wild cluster bootstrap with five clusters ----------------------------
+## Driscoll-Kraay and cluster standard errors with five cities are small-sample.
+## The wild cluster restricted bootstrap-t below enumerates all 6^5 = 7776 draws
+## of the six-point Webb weights at the city level (Rademacher weights would
+## give only 32 draws). It needs no package. Two tests: the price-credit slope
+## of Table 4, column 1, and the post-2017 price interaction of Table C.1.
+cat("\n--- 7.4 Wild cluster bootstrap (Webb weights, all 7776 draws, 5 clusters) ---\n")
+wcr_p <- function(df, y, x, ctrl, cl = "city") {
+  df <- df[stats::complete.cases(df[, c(y, x, ctrl)]), ]
+  g <- df[[cl]]; dm <- function(v) v - ave(v, g)
+  X <- sapply(c(x, ctrl), function(v) dm(df[[v]])); Y <- dm(df[[y]])
+  X0 <- X[, ctrl, drop = FALSE]
+  tstat <- function(Yb) {
+    b <- solve(crossprod(X), crossprod(X, Yb)); e <- drop(Yb - X %*% b)
+    Bread <- solve(crossprod(X)); G <- length(unique(g)); n <- nrow(X); k <- ncol(X)
+    meat <- Reduce(`+`, lapply(split(seq_len(n), g), function(i) {
+      s <- crossprod(X[i, , drop = FALSE], e[i]); s %*% t(s) }))
+    V <- Bread %*% meat %*% Bread * G / (G - 1) * (n - 1) / (n - k)
+    b[1] / sqrt(V[1, 1])
+  }
+  t0 <- tstat(Y)
+  b0 <- solve(crossprod(X0), crossprod(X0, Y)); fit0 <- drop(X0 %*% b0); u0 <- Y - fit0
+  w6 <- c(-sqrt(1.5), -1, -sqrt(0.5), sqrt(0.5), 1, sqrt(1.5))
+  cls <- unique(g); W <- as.matrix(expand.grid(rep(list(w6), length(cls))))
+  tb <- apply(W, 1, function(w) tstat(fit0 + u0 * w[match(g, cls)]))
+  c(t = t0, p = mean(abs(tb) >= abs(t0)))
 }
+dwb <- d |> arrange(city, quarter) |> group_by(city) |>
+  mutate(d_lprice = l_price - dplyr::lag(l_price), d_linv = l_inv - dplyr::lag(l_inv),
+         d_cash = cash_rate - dplyr::lag(cash_rate), tight_l1 = dplyr::lag(tightness),
+         d_wpi = l_wpi - dplyr::lag(l_wpi), inv_post = d_linv * post) |> ungroup() |>
+  as.data.frame()
+wb_slope <- wcr_p(dwb, "d_lprice", "d_linv", c("d_cash", "tight_l1"))
+wb_int   <- wcr_p(dwb, "d_lprice", "inv_post", c("d_linv", "post", "d_cash", "tight_l1", "d_wpi"))
+cat(sprintf("  Price-credit slope (Table 4, col 1): t = %.2f, wild-cluster p = %.3f\n", wb_slope["t"], wb_slope["p"]))
+cat(sprintf("  Post-2017 price interaction (Table C.1): t = %.2f, wild-cluster p = %.3f\n", wb_int["t"], wb_int["p"]))
+robust(rbind(slope = wb_slope, interaction = wb_int), "robust_wildboot.txt")
 
 ## 7.5 Local-projection lag-length sensitivity -------------------------------
 ## The LP timing (rents significant ~q7) uses 4 control lags. Show the timing is
@@ -720,17 +730,19 @@ rent_roll_coef <- function(df) {
   Pw <- pdata.frame(df, index = c("city","quarter"))
   m <- try(plm(diff(l_rent) ~ lag(l_pr_gap,1) + lag(tightness,1) + diff(l_wpi) + diff(l_emp),
                Pw, model = "within"), silent = TRUE)
-  if (inherits(m,"try-error")) return(c(wpi = NA, emp = NA, tight = NA))
-  cf <- coef(m)
+  if (inherits(m,"try-error")) return(c(wpi = NA, emp = NA, tight = NA, wpi_p = NA, tight_p = NA))
+  cf <- coef(m); pv <- dk_coeftest(m)[, 4]
   c(wpi = unname(cf["diff(l_wpi)"]), emp = unname(cf["diff(l_emp)"]),
-    tight = unname(cf["lag(tightness, 1)"]))
+    tight = unname(cf["lag(tightness, 1)"]), wpi_p = unname(pv["diff(l_wpi)"]),
+    tight_p = unname(pv["lag(tightness, 1)"]))
 }
 qs <- sort(unique(d$qdate)); win <- 20
 rent_roll <- bind_rows(lapply(qs[qs >= qs[win]], function(end) {
   wq <- qs[qs > end - win/4 & qs <= end]
   if (length(wq) < win) return(NULL)
   cf <- rent_roll_coef(filter(d, qdate %in% wq))
-  data.frame(qend = end, wpi_coef = cf["wpi"], emp_coef = cf["emp"], tight_coef = cf["tight"])
+  data.frame(qend = end, wpi_coef = cf["wpi"], emp_coef = cf["emp"], tight_coef = cf["tight"],
+             wpi_p = cf["wpi_p"], tight_p = cf["tight_p"])
 }))
 write_csv(rent_roll, file.path(OUTDIR, "alt_rent_rolling_coef.csv"))
 cat(sprintf("  Rolling wage coef: first %.2f -> last %.2f; employment: %.2f -> %.2f\n",

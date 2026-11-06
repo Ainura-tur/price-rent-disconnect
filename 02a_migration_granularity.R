@@ -107,7 +107,7 @@ stopifnot(chk$max_abs_diff < 1e-8)
 
 d <- panel |>
   mutate(l_rent = log(rents), l_price = log(prop_price), l_wpi = log(wpi),
-         l_emp = log(employment), l_inv = log(inv_commit), l_pr_gap = log(price_rent))
+         l_emp = log(employment), l_inv = log(inv_commit_sa), l_pr_gap = log(price_rent))  # seasonally adjusted credit
 P <- pdata.frame(d, index = c("city","quarter"))
 
 # Helper: pull a single coefficient row under DK inference, formatted.

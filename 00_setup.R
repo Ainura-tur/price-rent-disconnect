@@ -20,6 +20,11 @@ summarise <- dplyr::summarise; summarize <- dplyr::summarize
 arrange <- dplyr::arrange;     count     <- dplyr::count;  lag <- dplyr::lag
 lead   <- dplyr::lead
 
+# ---- Figures ----------------------------------------------------------------
+# White background, because theme_minimal() leaves the PNG transparent and some
+# viewers then show it on black.
+ggsave <- function(..., bg = "white") ggplot2::ggsave(..., bg = bg)
+
 # ---- Paths ------------------------------------------------------------------
 RAW    <- "raw"
 CLEAN  <- "clean"
