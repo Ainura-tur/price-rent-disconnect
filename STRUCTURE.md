@@ -113,7 +113,7 @@ diagnostics not in the master run.
 | `62020010.xlsx` | ABS 6202.0 employment | 01 |
 | `ABS_ANA_SFD_1_0_0_C_FCE_RDSH__20_2_3_4_5_6_1_Q.csv` | state final demand: housing services consumption | 01 |
 | `ABS_ANA_SFD_1_0_0_C_GFC_PSS_GSS_20_2_3_4_5_6_1_Q.csv` | state final demand: GFCF (Private / Public) | 01 |
-| `ABS_LEND_HOUSING_1_1_..._AUS_Q.csv`  (= `F_LEND`) | investor housing commitments; 5601.0 successor; serves join + tail | 01 |
+| `ABS_LEND_HOUSING_1_1_..._AUS_Q.csv`  (= `F_LEND`) | investor housing commitments; 5601.0 successor; serves join + tail | 01, 02c, 02d, 03f, 04, 04d, 05 |
 | `ABS_OMAD_VISA_..._AUS_Q.csv`  (= `F_OMAD`) | NOM by visa-and-citizenship group, by state | 01 |
 | `d02hist.xlsx`  (= `F_D2`) | RBA D2 national housing credit (investor/oo stock, switching flow) | 01 |
 | `panel_main.csv` | existing paper panel; base into which reconstructed series are swapped | 01 |
@@ -151,11 +151,11 @@ Without `raw_rev/`, `run_all.R` skips `01b` and runs `02f` on the committed
 | File | Written by | Read by |
 |------|-----------|---------|
 | `price_panel.rds`, `price_panel.csv` | 01 | (price reconstruction artefact) |
-| `panel_combined.rds` | 01 | 02, 02a, 02c, 02d, 03, 03f, 04, 05 |
+| `panel_combined.rds` | 01 | 02, 02a, 02c, 02d, 02f, 03, 03f, 04, 04d, 05 |
 | `panel_combined.csv` | 01 | (inspection; also copied to `output/`) |
 
-`panel_combined.rds` is the single analysis panel. Stages 02c, 03f, 04 and 05
-also read the seasonally adjusted lending series from `F_LEND` in `raw/`, and
+`panel_combined.rds` is the single analysis panel. Stages 02c, 03f, 04, 04d and
+05 also read the seasonally adjusted lending series from `F_LEND` in `raw/`, and
 so does 02d for the investor share (Table 2 and Table E.1); every other stage
 works from the panel.
 
@@ -277,7 +277,10 @@ purchase_volumes.txt       table_purchase_volumes.tex  (Table 6)
 
 04d takes the model code from `04_model_matching.R` and its estimates from
 `model_estimates.csv`. It uses `R/fast_solver.R` only after checking that it
-reproduces 04's solver.
+reproduces 04's solver. It also regresses growth in investor loan numbers
+(`F_LEND`, by state from 2019:Q3) on growth in the non-price part of
+commitments, with the prices in `clean/panel_combined.rds`, and writes the
+result to `purchase_volumes.txt`.
 
 ### Stages 05, 05c and 05b — bootstrap and Monte Carlo
 
@@ -363,7 +366,7 @@ raw/ ──────────▶ 01_build_panel.R ──▶ clean/panel_co
                                                                  └─▶ 03f_missing_figures.R ──▶ 03g_cr_endpoints.R
 
 output/sa_B_omega.csv, sa_C_lp.csv ──▶ 04_model_matching.R ──▶ 04b_identification.R
-output/sa_B_omega.csv, sa_C_lp.csv, model_estimates.csv ──▶ 04d_purchase_volumes.R (with 04_model_matching.R, R/fast_solver.R)
+output/sa_B_omega.csv, sa_C_lp.csv, model_estimates.csv ──▶ 04d_purchase_volumes.R (with 04_model_matching.R, R/fast_solver.R, F_LEND, clean/panel_combined.rds)
 output/model_estimates.csv ──▶ 05_bootstrap.R ──▶ output/boot_b*.rds ──▶ 05c_small_sample.R ──▶ 05b_bootstrap_summary.R
 output/boot_b8_*.rds, model_*.csv ──▶ 04c_inflation.R
 raw_rev/ ──▶ 01b_new_lease_rents.R ──▶ clean_rev/new_lease_rents.csv ──▶ 02f_new_lease_tests.R (with clean/panel_combined.rds)

@@ -65,7 +65,7 @@ Carlo, `04c` or `06`.
 | 3g | `03g_cr_endpoints.R` | MCUB valid-range endpoints used in Figure D.2 (needs `ivcrtest`) |
 | 4 | `04_model_matching.R` | Model estimates, decomposition, counterfactual, state dependence (Section 6) |
 | 4b | `04b_identification.R` | Profiles of the matching distance and sensitivity of the responses to each parameter (Section 6.4, Figure 8) |
-| 4d | `04d_purchase_volumes.R` | Investor purchase volumes: re-estimates the model with purchases taking part of the credit response (Section 6.3, Table 6) |
+| 4d | `04d_purchase_volumes.R` | Investor purchase volumes: re-estimates the model with purchases taking part of the credit response (Section 6.3, Table 6), and regresses investor loan numbers on the non-price part of commitments, 2019–2025 |
 | 5 | `05_bootstrap.R` | Block bootstrap of the model: 399 draws with blocks of eight quarters and 120 each with blocks of four and twelve, saved in 22 chunks |
 | 5c | `05c_small_sample.R` | Recentred-bootstrap Monte Carlo of the estimator's small-sample behaviour (Section 6.4) |
 | 5b | `05b_bootstrap_summary.R` | Block-bootstrap intervals for Tables 5 and 7 and bands in Figures 7 and 9 |
@@ -100,6 +100,7 @@ Outputs go to `output/`. Each script's header lists the files it writes.
 | Channel test (Section 5.3) | `sa_D_channel.txt` |
 | Tables 5 and 7, Figures 7 and 9 | `model_*.csv`, `boot_summary.csv`, `fig_model_fit.png`, `fig_model_counterfactual.png` |
 | Table 6, investor purchase volumes (Section 6.3) | `table_purchase_volumes.tex`, `purchase_sensitivity.csv`, `purchase_paths.csv`, `purchase_volumes.txt` |
+| Investor loan numbers against the non-price part of commitments (Section 6.3) | `purchase_volumes.txt` |
 | Identification (Section 6.4), Figure 8 | `model_ident.txt`, `model_profile.csv`, `model_profile_omega.csv`, `model_sensitivity.csv`, `fig_model_profile.png` |
 | Small-sample behaviour (Section 6.4) | `model_small_sample.txt`, `model_small_sample.csv` |
 | Credit conditions and measured inflation (Section 6.7), Figure 10 | `model_inflation.txt`, `model_inflation.csv`, `fig_model_inflation.png` |

@@ -21,8 +21,9 @@
 #   03g_cr_endpoints.R     MCUB valid-range endpoints (needs the ivcrtest package)
 #   04_model_matching.R    model estimation, decomposition, counterfactual
 #   04b_identification.R   distance profiles and sensitivity (identification)
-#   04d_purchase_volumes.R investor purchase volumes (Section 6.3, Table 6);
-#                          uses R/fast_solver.R once it matches 04's solver
+#   04d_purchase_volumes.R investor purchase volumes and loan numbers (Section
+#                          6.3, Table 6); uses R/fast_solver.R once it matches
+#                          04's solver
 #   05_bootstrap.R         block bootstrap of the model, 22 chunks of draws, each
 #                          in its own R process (six at once on Windows)
 #   05c_small_sample.R     small-sample Monte Carlo built on the bootstrap draws

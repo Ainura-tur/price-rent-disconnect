@@ -8,7 +8,10 @@
 # in proportion to lending conditions at every horizon or with their own decay
 # rate rho_X. Each scenario re-estimates all seven parameters with the targets,
 # weights, bounds and search of 04, then the other six with theta = 1. The
-# scenarios are assumptions, not estimates of purchase volumes.
+# scenarios are assumptions, not estimates of purchase volumes. The data bear
+# on s through investor loan numbers, which the ABS reports by state only from
+# 2019:Q3; the section on loan numbers regresses their growth on growth in the
+# non-price part of commitments.
 #
 # Adapted from Ratbek Dzhumashev's purchase_volume_sensitivity.R (November
 # 2026). It reads the pipeline's own output/ rather than frozen copies, starts
@@ -17,7 +20,8 @@
 # R/fast_solver.R must reproduce 04's solver before it replaces it.
 #
 # Reads:  output/sa_B_omega.csv, output/sa_C_lp.csv (02c),
-#         output/model_estimates.csv (04), 04_model_matching.R, R/fast_solver.R
+#         output/model_estimates.csv (04), 04_model_matching.R, R/fast_solver.R,
+#         clean/panel_combined.rds (01), and the ABS lending file F_LEND in raw/
 # Writes: output/purchase_sensitivity.csv, output/purchase_paths.csv,
 #         output/purchase_volumes.txt, output/table_purchase_volumes.tex
 # =============================================================================
@@ -122,6 +126,33 @@ res <- do.call(rbind, results); rownames(res) <- NULL
 write.csv(res, file.path(OUTDIR, "purchase_sensitivity.csv"), row.names = FALSE)
 write.csv(do.call(rbind, paths), file.path(OUTDIR, "purchase_paths.csv"), row.names = FALSE)
 
+# ---- Investor loan numbers ------------------------------------------------------
+# Measured commitments are phi + p + X in logs, so commitment growth minus price
+# growth is the non-price part, phi + X. Loan numbers measure purchases X. A
+# slope near one, with a high R-squared, means purchases carry nearly all of the
+# non-price movement in commitments, which points to s close to one. Same
+# lending series as 04 (seasonally adjusted, investor, excluding refinancing).
+lend <- read_csv(F_LEND, show_col_types = FALSE) |>
+  filter(`Loan Purpose` == "Total dwellings excluding refinancing", `Housing Purpose` == "Investor",
+         `Adjustment Type` == "Seasonally Adjusted", Measure %in% c("Number", "Value"),
+         Region %in% names(STATE2CITY)) |>
+  mutate(city = recode(Region, !!!STATE2CITY), quarter = as.yearqtr(gsub("-Q", " Q", TIME_PERIOD)),
+         v = as.numeric(OBS_VALUE)) |>
+  select(city, quarter, Measure, v) |>
+  distinct(city, quarter, Measure, .keep_all = TRUE) |>
+  tidyr::pivot_wider(names_from = Measure, values_from = v)
+ln <- readRDS(file.path(CLEAN, "panel_combined.rds")) |> select(city, quarter, prop_price) |>
+  inner_join(lend, by = c("city", "quarter")) |>
+  filter(quarter <= TARGET_END, !is.na(Number), !is.na(Value)) |>
+  arrange(city, quarter) |> group_by(city) |>
+  mutate(d_num = log(Number) - lag(log(Number)),
+         d_nonprice = (log(Value) - lag(log(Value))) - (log(prop_price) - lag(log(prop_price)))) |>
+  ungroup() |> filter(is.finite(d_num), is.finite(d_nonprice))
+m_ln <- plm::plm(d_num ~ d_nonprice, data = plm::pdata.frame(ln, index = c("city", "quarter")),
+                 model = "within")
+ln_city <- ln |> group_by(city) |>
+  summarise(slope = cov(d_num, d_nonprice) / var(d_nonprice), .groups = "drop")
+
 # ---- Numbers quoted in Section 6.3 ----------------------------------------------
 prop <- res[res$kind == "proportional", ]
 sep  <- res[res$kind == "dynamic", ]
@@ -142,7 +173,12 @@ summ <- c(
   sprintf("  with distance of 15 or more (%d scenarios): distances %s",
           nrow(far), paste(sprintf("%.2f", far$distance), collapse = ", ")),
   sprintf("Smallest increase in distance with theta = 1, all scenarios: %.2f",
-          min(res$theta1_distance - res$distance)))
+          min(res$theta1_distance - res$distance)),
+  sprintf("Investor loan numbers, %s to %s (%d city-quarters): growth in loan numbers on growth in commitments minus price growth, city fixed effects",
+          format(min(ln$quarter)), format(max(ln$quarter)), nrow(ln)),
+  sprintf("  slope %.4f (Driscoll-Kraay s.e. %.4f), within R-squared %.3f",
+          coef(m_ln)[["d_nonprice"]], dk_se(m_ln)[["d_nonprice"]], summary(m_ln)$r.squared[["rsq"]]),
+  sprintf("  slope by city: %s", paste(sprintf("%s %.2f", ln_city$city, ln_city$slope), collapse = ", ")))
 writeLines(summ, file.path(OUTDIR, "purchase_volumes.txt"))
 cat("\n", paste(summ, collapse = "\n"), "\n", sep = "")
 
