@@ -4,16 +4,16 @@
 # The earlier scripts save these figures 8 to 9 inches wide at 300 dpi, and the
 # paper shrinks them to fit, so their text prints at about 6 pt, their lines
 # thin out and their resolution falls below 500 dpi. This script redraws them
-# from the saved results in the style of Figures 2, 9 and F.1: theme_minimal
+# from the saved results in the style of Figures 2, 6 and 10: theme_minimal
 # with base_size = 11, plain panel titles, main lines 0.9 wide, 600 dpi, and
 # each saved at its share of a 6.5-inch line. The paper prints a full line at
 # \textwidth = 6.3 inches, so every figure shrinks by the same 3 percent and
-# its text prints at about 8.5 pt, as in Figures 2, 9 and F.1.
+# its text prints at about 8.5 pt, as in Figures 2, 6 and 10.
 #
 #   Figure 5    fig_lp_irf_adjusted.png       0.8 \textwidth in the paper
-#   Figure 6    fig_model_fit.png             0.8
-#   Figure 7    fig_model_profile.png         1.0   lines now as thick as elsewhere
-#   Figure 8    fig_model_counterfactual.png  0.8
+#   Figure 7    fig_model_fit.png             0.8
+#   Figure 8    fig_model_profile.png         1.0   lines now as thick as elsewhere
+#   Figure 9    fig_model_counterfactual.png  0.8
 #   Figure D.1  fig_lpiv_main.png             0.9
 #   Figure D.2  fig_cr_valid_range.png        1.0
 #   Figure E.1  fig_lp_postimpact.png         0.85  panel titles in words
@@ -29,7 +29,7 @@
 #         output/model_estimates.csv, output/model_fit.csv,
 #         output/model_counterfactual.csv (04_model_matching.R)
 #         output/model_profile.csv (04b_identification.R)
-#         output/boot_b8_*.rds (05_bootstrap.R), for the bands in Figures 6 and 8
+#         output/boot_b8_*.rds (05_bootstrap.R), for the bands in Figures 7 and 9
 # Writes: the eight figure files above, in output/
 # =============================================================================
 
@@ -45,9 +45,9 @@ arrange   <- dplyr::arrange;   count     <- dplyr::count
 lag       <- dplyr::lag
 
 # ---- Common style -------------------------------------------------------------------
-LINE <- 6.5                    # inches; Figures 2, 9 and F.1 are saved this wide
+LINE <- 6.5                    # inches; Figures 2, 6 and 10 are saved this wide
 DPI  <- 600
-LW   <- 0.9                    # main lines, as in Figures 9 and F.1
+LW   <- 0.9                    # main lines, as in Figures 6 and 10
 PAL  <- c(Price = "#c0392b", Rent = "#1b6f7a")
 NAVY <- "#2c3e50"
 theme_paper <- theme_minimal(base_size = 11) +
@@ -118,9 +118,9 @@ gE1 <- ggplot(fE1, aes(h, beta, colour = outcome, fill = outcome)) +
   theme_paper
 save_fig(gE1, "fig_lp_postimpact.png", 0.85, 5.15)
 
-# ---- Figures 6 and 8: the model, with bootstrap intervals (04, 05) -------------------
+# ---- Figures 7 and 9: the model, with bootstrap intervals (04, 05) -------------------
 if (is.null(B8)) {
-  cat("No boot_b8 files in output/, so Figures 6 and 8 are left as they are.\n")
+  cat("No boot_b8 files in output/, so Figures 7 and 9 are left as they are.\n")
 } else {
   bp <- band("mp", 13); br <- band("mr", 13)
   fit <- rd("model_fit.csv") |> filter(outcome %in% c("Price", "Rent")) |> arrange(outcome, h) |>
@@ -158,7 +158,7 @@ if (is.null(B8)) {
   save_fig(g8, "fig_model_counterfactual.png", 0.8, 2.75)
 }
 
-# ---- Figure 7: profiles of the matching distance (04, 04b) ---------------------------
+# ---- Figure 8: profiles of the matching distance (04, 04b) ---------------------------
 est <- rd("model_estimates.csv"); th <- setNames(est$estimate, est$param)
 lab7 <- c(theta = "Speed of price adjustment, \u03b8", kappa = "Speed of tenure switching, \u03ba",
           eta = "Tenure response to prices, \u03b7")
