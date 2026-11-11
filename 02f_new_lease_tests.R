@@ -520,7 +520,7 @@ sink()
 # Figure 5. Panel (b): the CPI response beside the CPI response that Equation 5
 # predicts from the new-lease response. The predictions share the new-lease
 # colour and differ by line type. Prices and CPI rents keep their colours from
-# Figure 9; the new-lease amber passes colour-vision checks against both.
+# Figure 10; the new-lease amber passes colour-vision checks against both.
 lab   <- c(a = "(a) Prices and rents", b = "(b) CPI rents and lease repricing")
 s_lab <- c(p = "Prices", n = "New-lease rents", c = "CPI rents",
            t5  = sprintf("Predicted CPI rents, \u03c9 = %.2f", OMEGA_T5),
@@ -541,7 +541,7 @@ g <- ggplot(fig, aes(h, value)) +
   geom_hline(yintercept = 0, linewidth = 0.3, colour = "grey50") +
   geom_ribbon(data = fig[!is.na(fig$lo), ], aes(ymin = lo, ymax = hi, fill = series),
               alpha = 0.13, colour = NA, show.legend = FALSE) +
-  geom_line(aes(colour = series, linetype = series), linewidth = 0.9) +   # as Figure 9
+  geom_line(aes(colour = series, linetype = series), linewidth = 0.9) +   # as Figure 10
   facet_wrap(~panel) +
   scale_x_continuous(breaks = seq(0, LP_H, 4)) +
   scale_colour_manual(values = pal) + scale_linetype_manual(values = lty) +
@@ -552,6 +552,6 @@ g <- ggplot(fig, aes(h, value)) +
   theme_minimal(base_size = 11) +
   theme(legend.position = "bottom", panel.grid.minor = element_blank(),
         panel.spacing.x = grid::unit(1.4, "lines"), legend.key.width = grid::unit(2.2, "lines"))
-# 6.5 inches wide, like Figure 9, so its text prints at about 8 pt at \textwidth.
+# 6.5 inches wide, like Figure 10, so its text prints at about 8 pt at \textwidth.
 ggsave(file.path(OUTDIR, "fig_new_lease_lp.png"), g, width = 6.5, height = 3.8, dpi = 600)
 cat("Wrote", file.path(OUTDIR, "new_lease_tests.txt"), ", new_lease_lp.csv, new_lease_boot.csv and fig_new_lease_lp.png\n")

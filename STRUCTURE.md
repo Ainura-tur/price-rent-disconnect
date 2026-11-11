@@ -13,8 +13,9 @@ project-root/
 ├── run_all.R                      entry point: Rscript run_all.R [--bootstrap]
 │                                  sources 00_setup.R; runs 01 -> 01b -> 02 -> 02a
 │                                  -> 02c -> 02d -> 02f -> 03 -> 03f -> 03g -> 04
-│                                  -> 04b, with --bootstrap also 05 -> 05c -> 05b,
-│                                  then 04c (once bootstrap draws exist) and 06
+│                                  -> 04b -> 04d, with --bootstrap also 05 -> 05c
+│                                  -> 05b, then 04c (once bootstrap draws exist)
+│                                  and 06
 │                                  (pre-flight: verify_raw.R); logs to logs/
 │
 ├── verify_raw.R                   read-only pre-run check of raw/ inputs
@@ -23,6 +24,7 @@ project-root/
 ├── _targets.R                     ALTERNATIVE entry point: targets::tar_make()
 │                                  dependency-tracked; reruns only stale stages
 ├── R/
+│   ├── fast_solver.R              faster model solver for 04d, checked against 04's
 │   └── functions.R                stage wrappers + file-listing helpers for _targets.R
 │   _targets/                      (auto-created cache; gitignore it)
 │
@@ -44,6 +46,7 @@ project-root/
 ├── 03g_cr_endpoints.R             STAGE 3g MCUB endpoints (optional; needs ivcrtest)
 ├── 04_model_matching.R            STAGE 4  model estimation by impulse-response matching
 ├── 04b_identification.R           STAGE 4b distance profiles and sensitivity
+├── 04d_purchase_volumes.R         STAGE 4d investor purchase volumes (Section 6.3, Table 6)
 ├── 04c_inflation.R                STAGE 4c measured inflation (runs after the bootstrap)
 ├── 05_bootstrap.R                 STAGE 5  block bootstrap of the model, in 22 chunks
 ├── 05c_small_sample.R             STAGE 5c small-sample Monte Carlo
@@ -70,8 +73,8 @@ project-root/
 ## Naming convention
 
 Numbered scripts are pipeline stages run by `run_all.R` (`01`, `01b`, `02`,
-`02a`, `02c`, `02d`, `02f`, `03`, `03f`, `03g`, `04`, `04b`, with `--bootstrap`
-also `05`, `05c` and `05b`, then `04c` and `06`). Two run out of numerical
+`02a`, `02c`, `02d`, `02f`, `03`, `03f`, `03g`, `04`, `04b`, `04d`, with
+`--bootstrap` also `05`, `05c` and `05b`, then `04c` and `06`). Two run out of numerical
 order: `04c` reads the bootstrap draws, so it follows `05b`, and `06` redraws
 figures that earlier stages also write, so it runs last. `01b` runs only when
 `raw_rev/` exists, and `02f` only when `clean_rev/new_lease_rents.csv` exists or
@@ -79,7 +82,8 @@ figures that earlier stages also write, so it runs last. `01b` runs only when
 output file. The `a` suffix denotes a stage that depends on
 and extends the same-numbered stage (`02a` reads the panel and reuses `02`'s
 inference machinery, but is logically a continuation of estimation). Unnumbered
-`.R` files are either sourced helpers (`00_setup.R`, `R/functions.R`) or hand-run
+`.R` files are either sourced helpers (`00_setup.R`, `R/functions.R`,
+`R/fast_solver.R`) or hand-run
 diagnostics not in the master run.
 
 > Two standalone diagnostics had misspelled filenames as first uploaded
@@ -109,7 +113,7 @@ diagnostics not in the master run.
 | `62020010.xlsx` | ABS 6202.0 employment | 01 |
 | `ABS_ANA_SFD_1_0_0_C_FCE_RDSH__20_2_3_4_5_6_1_Q.csv` | state final demand: housing services consumption | 01 |
 | `ABS_ANA_SFD_1_0_0_C_GFC_PSS_GSS_20_2_3_4_5_6_1_Q.csv` | state final demand: GFCF (Private / Public) | 01 |
-| `ABS_LEND_HOUSING_1_1_..._AUS_Q.csv`  (= `F_LEND`) | investor housing commitments; 5601.0 successor; serves join + tail | 01 |
+| `ABS_LEND_HOUSING_1_1_..._AUS_Q.csv`  (= `F_LEND`) | investor housing commitments; 5601.0 successor; serves join + tail | 01, 02c, 02d, 03f, 04, 04d, 05 |
 | `ABS_OMAD_VISA_..._AUS_Q.csv`  (= `F_OMAD`) | NOM by visa-and-citizenship group, by state | 01 |
 | `d02hist.xlsx`  (= `F_D2`) | RBA D2 national housing credit (investor/oo stock, switching flow) | 01 |
 | `panel_main.csv` | existing paper panel; base into which reconstructed series are swapped | 01 |
@@ -147,11 +151,11 @@ Without `raw_rev/`, `run_all.R` skips `01b` and runs `02f` on the committed
 | File | Written by | Read by |
 |------|-----------|---------|
 | `price_panel.rds`, `price_panel.csv` | 01 | (price reconstruction artefact) |
-| `panel_combined.rds` | 01 | 02, 02a, 02c, 02d, 03, 03f, 04, 05 |
+| `panel_combined.rds` | 01 | 02, 02a, 02c, 02d, 02f, 03, 03f, 04, 04d, 05 |
 | `panel_combined.csv` | 01 | (inspection; also copied to `output/`) |
 
-`panel_combined.rds` is the single analysis panel. Stages 02c, 03f, 04 and 05
-also read the seasonally adjusted lending series from `F_LEND` in `raw/`, and
+`panel_combined.rds` is the single analysis panel. Stages 02c, 03f, 04, 04d and
+05 also read the seasonally adjusted lending series from `F_LEND` in `raw/`, and
 so does 02d for the investor share (Table 2 and Table E.1); every other stage
 works from the panel.
 
@@ -226,11 +230,11 @@ fig_rent_rolling_coef.png
 
 `fig_divergence.png` (Figure E.2) is redrawn by stage 06.
 
-### Stage 02f — rents on new leases (Online Appendix F)
+### Stage 02f — rents on new leases (Section 5.4, Online Appendix F)
 
 ```
 new_lease_tests.txt     new_lease_lp.csv     new_lease_boot.csv
-fig_new_lease_lp.png    (Figure F.1)
+fig_new_lease_lp.png    (Figure 6)
 ```
 
 ### Stages 02c and 02d — seasonally adjusted credit
@@ -264,6 +268,20 @@ model_ident.txt         model_profile.csv          model_profile_omega.csv
 model_sensitivity.csv   fig_model_profile.png
 ```
 
+### Stage 04d — investor purchase volumes (Section 6.3)
+
+```
+purchase_sensitivity.csv   purchase_paths.csv
+purchase_volumes.txt       table_purchase_volumes.tex  (Table 6)
+```
+
+04d takes the model code from `04_model_matching.R` and its estimates from
+`model_estimates.csv`. It uses `R/fast_solver.R` only after checking that it
+reproduces 04's solver. It also regresses growth in investor loan numbers
+(`F_LEND`, by state from 2019:Q3) on growth in the non-price part of
+commitments, with the prices in `clean/panel_combined.rds`, and writes the
+result to `purchase_volumes.txt`.
+
 ### Stages 05, 05c and 05b — bootstrap and Monte Carlo
 
 ```
@@ -275,10 +293,10 @@ boot_summary.csv        boot_shares.csv            boot_counterfactual_draws.csv
 fig_model_fit.png       fig_model_counterfactual.png   (redrawn with bands)
 ```
 
-### Stage 04c — credit conditions and measured inflation (Section 6.6)
+### Stage 04c — credit conditions and measured inflation (Section 6.7)
 
 ```
-model_inflation.txt     model_inflation.csv        fig_model_inflation.png  (Figure 9)
+model_inflation.txt     model_inflation.csv        fig_model_inflation.png  (Figure 10)
 ```
 
 ### Stage 06 — the paper's figures in one style
@@ -286,8 +304,8 @@ model_inflation.txt     model_inflation.csv        fig_model_inflation.png  (Fig
 Redraws from saved results, at the size each prints in the paper (600 dpi):
 
 ```
-fig_lp_irf_adjusted.png (Figure 5)     fig_model_fit.png (Figure 6)
-fig_model_profile.png (Figure 7)       fig_model_counterfactual.png (Figure 8)
+fig_lp_irf_adjusted.png (Figure 5)     fig_model_fit.png (Figure 7)
+fig_model_profile.png (Figure 8)       fig_model_counterfactual.png (Figure 9)
 fig_lpiv_main.png (Figure D.1)         fig_cr_valid_range.png (Figure D.2)
 fig_lp_postimpact.png (Figure E.1)     fig_divergence.png (Figure E.2)
 ```
@@ -348,6 +366,7 @@ raw/ ──────────▶ 01_build_panel.R ──▶ clean/panel_co
                                                                  └─▶ 03f_missing_figures.R ──▶ 03g_cr_endpoints.R
 
 output/sa_B_omega.csv, sa_C_lp.csv ──▶ 04_model_matching.R ──▶ 04b_identification.R
+output/sa_B_omega.csv, sa_C_lp.csv, model_estimates.csv ──▶ 04d_purchase_volumes.R (with 04_model_matching.R, R/fast_solver.R, F_LEND, clean/panel_combined.rds)
 output/model_estimates.csv ──▶ 05_bootstrap.R ──▶ output/boot_b*.rds ──▶ 05c_small_sample.R ──▶ 05b_bootstrap_summary.R
 output/boot_b8_*.rds, model_*.csv ──▶ 04c_inflation.R
 raw_rev/ ──▶ 01b_new_lease_rents.R ──▶ clean_rev/new_lease_rents.csv ──▶ 02f_new_lease_tests.R (with clean/panel_combined.rds)
@@ -355,7 +374,8 @@ output/ (saved results of 02, 02c, 03f, 04, 04b, 05) ──▶ 06_paper_figures.
 ```
 
 `02_estimate.R` writes `rolling_financial_r2.csv`, which `03_figures.R` reads.
-Stage 04 needs the outputs of 02c, and stage 05 needs the outputs of 02c and 04.
+Stages 04 and 04d need the outputs of 02c, 04d also needs those of 04, and
+stage 05 needs the outputs of 02c and 04.
 Stage 04c needs the block-8 bootstrap draws, and 06 needs every stage before it.
 Any stage can fail without stopping the later stages from starting;
 `run_all.R` reports per-stage status and exits non-zero if any failed. If a

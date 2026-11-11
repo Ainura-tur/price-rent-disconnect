@@ -13,24 +13,27 @@
 #                    projections (Figure 5, Figure E.1), channel test, checks
 #   02d_sa_tables.R  Tables C.2-C.3, stacked tests, seasonal, Sydney, cash rate,
 #                    Tables 1-2 summary statistics, Table E.1 unit-root tests
-#   02f_new_lease_tests.R  new-lease rents against the model (Tables F.1-F.2,
-#                    Figure F.1); reads clean_rev/new_lease_rents.csv
+#   02f_new_lease_tests.R  new-lease rents against the model (Figure 6,
+#                    Tables F.1-F.2); reads clean_rev/new_lease_rents.csv
 #                    (committed; 01b rebuilds it)
 #   03_figures.R     Figure 1 and descriptive figures (Figures 2-4)
 #   03f_missing_figures.R  APRA instruments: Table D.1, Figures D.1-D.2
 #   03g_cr_endpoints.R     MCUB valid-range endpoints (needs the ivcrtest package)
 #   04_model_matching.R    model estimation, decomposition, counterfactual
 #   04b_identification.R   distance profiles and sensitivity (identification)
+#   04d_purchase_volumes.R investor purchase volumes and loan numbers (Section
+#                          6.3, Table 6); uses R/fast_solver.R once it matches
+#                          04's solver
 #   05_bootstrap.R         block bootstrap of the model, 22 chunks of draws, each
 #                          in its own R process (six at once on Windows)
 #   05c_small_sample.R     small-sample Monte Carlo built on the bootstrap draws
-#   05b_bootstrap_summary.R  Tables 5-6 intervals, bands on Figures 6 and 8
+#   05b_bootstrap_summary.R  Tables 5 and 7 intervals, bands on Figures 7 and 9
 #                    These three take most of the run time, so they run only
 #                    with --bootstrap.
-#   04c_inflation.R  credit conditions and measured inflation (Section 6.6,
-#                    Figure 9); reads the bootstrap draws, so it runs after them,
+#   04c_inflation.R  credit conditions and measured inflation (Section 6.7,
+#                    Figure 10); reads the bootstrap draws, so it runs after them,
 #                    or in a later run that finds a full set in output/
-#   06_paper_figures.R  redraws Figures 5-8, D.1-D.2 and E.1-E.2 in one style
+#   06_paper_figures.R  redraws Figures 5, 7-9, D.1-D.2 and E.1-E.2 in one style
 #                    from saved results; runs last, because earlier stages write
 #                    older versions of the same files
 #
@@ -98,7 +101,7 @@ main <- function() {
   if (requireNamespace("ivcrtest", quietly = TRUE)) steps <- c(steps, "03g_cr_endpoints.R")
   else cat("\n(ivcrtest not installed; skipping 03g_cr_endpoints.R. Install with\n",
            " remotes::install_github('Ainura-tur/ivcrtest').)\n")
-  steps <- c(steps, "04_model_matching.R", "04b_identification.R")
+  steps <- c(steps, "04_model_matching.R", "04b_identification.R", "04d_purchase_volumes.R")
   
   # Pre-flight: verify raw/ inputs before running anything.
   # verify_raw.R is read-only and calls quit() with status 0/1. We run it in a
@@ -171,7 +174,7 @@ main <- function() {
       for (batch in split(todo, ceiling(seq_along(todo) / max(1L, length(cl))))) run_batch(batch, cl)
     if (!is.null(cl)) parallel::stopCluster(cl)
     results <- c(results, "05_bootstrap.R" = boot_ok)
-    # 05c sources 04_model_matching.R, which redraws Figures 6 and 8 without bands,
+    # 05c sources 04_model_matching.R, which redraws Figures 7 and 9 without bands,
     # so 05b, which draws them with bands, must run after it. Both need every chunk.
     if (boot_ok) {
       results <- c(results, "05c_small_sample.R" = run_step("05c_small_sample.R"))
@@ -193,7 +196,7 @@ main <- function() {
   cat("\n=============================================================\n  SUMMARY\n")
   for (i in seq_along(steps)) cat(sprintf("  [%s] %s\n", if (results[i]) "OK " else "FAIL", steps[i]))
   cat("\n  Outputs: clean/panel_combined.{rds,csv}; output/est_*, robust_*, sa_*,\n")
-  cat("           sa2_*, lpiv_apra.csv, new_lease_*, model_*, boot_* and fig_*.png;\n")
+  cat("           sa2_*, lpiv_apra.csv, new_lease_*, model_*, purchase_*, boot_* and fig_*.png;\n")
   cat("           clean_rev/new_lease_*.csv from 01b. See README.md\n")
   cat("           for which file holds each table and figure.\n")
   
@@ -230,7 +233,7 @@ tryCatch({
 
   # Which copy of each script ran, for the record.
   cat("\n---- script checksums (first 8 characters of the MD5) ----\n")
-  scripts <- sort(list.files(pattern = "[.]R$"))
+  scripts <- c(sort(list.files(pattern = "[.]R$")), sort(list.files("R", pattern = "[.]R$", full.names = TRUE)))
   cat(sprintf("  %s  %s\n", substr(unname(tools::md5sum(scripts)), 1, 8), scripts), sep = "")
   
   ok_all <- main()   # <- all step output is captured here, inside the sink

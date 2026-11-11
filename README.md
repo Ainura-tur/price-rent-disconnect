@@ -17,7 +17,7 @@ matching its impulse responses to the projections.
 From the repository root:
 
 ```sh
-Rscript run_all.R               # every stage except the bootstrap (about 15 minutes)
+Rscript run_all.R               # every stage except the bootstrap (about 20 minutes)
 Rscript run_all.R --bootstrap   # also the bootstrap and the Monte Carlo (about an hour)
 ```
 
@@ -46,8 +46,8 @@ in `raw_rev/`, which the repository does not hold (see "Rents on new leases"
 under Data). Without them, `run_all.R` skips `01b`.
 
 The dependency-tracked alternative, `targets::tar_make()`, runs stages 01 to 04b
-except `01b`, `02f` and `03g`. It does not run the bootstrap, the Monte Carlo,
-`04c` or `06`.
+except `01b`, `02f` and `03g`. It does not run `04d`, the bootstrap, the Monte
+Carlo, `04c` or `06`.
 
 ## Pipeline
 
@@ -59,20 +59,24 @@ except `01b`, `02f` and `03g`. It does not run the bootstrap, the Monte Carlo,
 | 2a | `02a_migration_granularity.R` | Migration-disaggregation robustness |
 | 2c | `02c_sa_additions.R` | Price momentum (Table 4), dynamic rent equation (ω), local projections (Figure 5, Figure E.1), channel test, owner-occupier credit, pre-splice sample |
 | 2d | `02d_sa_tables.R` | Tables 1–2, Tables C.2–C.3, stacked slope tests, seasonal-adjustment checks, Sydney and city-by-city changes, cash-rate interaction and level, unit-root tests (Table E.1) |
-| 2f | `02f_new_lease_tests.R` | Rents on new leases against the model: Tables F.1–F.2 and Figure F.1 (Online Appendix F) |
+| 2f | `02f_new_lease_tests.R` | Rents on new leases against the model: Figure 6 (Section 5.4) and Tables F.1–F.2 (Online Appendix F) |
 | 3 | `03_figures.R` | Figure 1 (`fig_transmission.pdf`) and Figures 2–4 |
 | 3f | `03f_missing_figures.R` | APRA-instrumented local projections and the correlation-restriction test: Table D.1, Figures D.1–D.2 |
 | 3g | `03g_cr_endpoints.R` | MCUB valid-range endpoints used in Figure D.2 (needs `ivcrtest`) |
 | 4 | `04_model_matching.R` | Model estimates, decomposition, counterfactual, state dependence (Section 6) |
-| 4b | `04b_identification.R` | Profiles of the matching distance and sensitivity of the responses to each parameter (Section 6.3, Figure 7) |
+| 4b | `04b_identification.R` | Profiles of the matching distance and sensitivity of the responses to each parameter (Section 6.4, Figure 8) |
+| 4d | `04d_purchase_volumes.R` | Investor purchase volumes: re-estimates the model with purchases taking part of the credit response (Section 6.3, Table 6), and regresses investor loan numbers on the non-price part of commitments, 2019–2025 |
 | 5 | `05_bootstrap.R` | Block bootstrap of the model: 399 draws with blocks of eight quarters and 120 each with blocks of four and twelve, saved in 22 chunks |
-| 5c | `05c_small_sample.R` | Recentred-bootstrap Monte Carlo of the estimator's small-sample behaviour (Section 6.3) |
-| 5b | `05b_bootstrap_summary.R` | Block-bootstrap intervals for Tables 5–6 and bands in Figures 6 and 8 |
-| 4c | `04c_inflation.R` | Credit conditions and measured inflation: annual price and rent inflation in the model, contributions to CPI inflation, bootstrap timing (Section 6.6, Figure 9) |
-| 6 | `06_paper_figures.R` | Redraws Figures 5–8, D.1–D.2 and E.1–E.2 in one style, at the size each prints in the paper |
+| 5c | `05c_small_sample.R` | Recentred-bootstrap Monte Carlo of the estimator's small-sample behaviour (Section 6.4) |
+| 5b | `05b_bootstrap_summary.R` | Block-bootstrap intervals for Tables 5 and 7 and bands in Figures 7 and 9 |
+| 4c | `04c_inflation.R` | Credit conditions and measured inflation: annual price and rent inflation in the model, contributions to CPI inflation, bootstrap timing (Section 6.7, Figure 10) |
+| 6 | `06_paper_figures.R` | Redraws Figures 5, 7–9, D.1–D.2 and E.1–E.2 in one style, at the size each prints in the paper |
+
+Stage 4d re-estimates the model under 13 assumptions about investor purchases,
+which takes about five minutes.
 
 Stages 5, 5c and 5b run only with `--bootstrap`. Stage 5c runs before 5b because
-it sources `04_model_matching.R`, which redraws Figures 6 and 8 without bands.
+it sources `04_model_matching.R`, which redraws Figures 7 and 9 without bands.
 Stage 4c reads the block-8 bootstrap draws, so it runs after them, or in a later
 run that finds a full set in `output/`. Stage 6 runs last, because stages 02c,
 03, 03f, 04, 04b, 05c and 05b write older versions of its eight figures.
@@ -90,23 +94,25 @@ Outputs go to `output/`. Each script's header lists the files it writes.
 | Table 2 | `sa2_S8_summary.txt` (`table2`) |
 | Table 3 | `est_rent.txt`, `est_rent_mg.txt` |
 | Table 4 | `sa_A_price.txt` |
-| Dynamic rent equation, ω (Section 5.2) | `sa_B_rent.txt`, `sa_B_omega.csv` |
+| Dynamic rent equation, ω (Section 5.1) | `sa_B_rent.txt`, `sa_B_omega.csv` |
 | Rent-equation stability, rolling coefficients (Online Appendix E) | `robust_rent_stability.txt`, `alt_rent_trend.txt`, `alt_rent_rolling_coef.csv` |
 | Figure 5, Figure E.1, local projections | `sa_C_lp.csv`, `fig_lp_irf_adjusted.png`, `fig_lp_postimpact.png` |
-| Channel test (Section 5.4) | `sa_D_channel.txt` |
-| Tables 5–6, Figures 6 and 8 | `model_*.csv`, `boot_summary.csv`, `fig_model_fit.png`, `fig_model_counterfactual.png` |
-| Identification (Section 6.3), Figure 7 | `model_ident.txt`, `model_profile.csv`, `model_profile_omega.csv`, `model_sensitivity.csv`, `fig_model_profile.png` |
-| Small-sample behaviour (Section 6.3) | `model_small_sample.txt`, `model_small_sample.csv` |
-| Credit conditions and measured inflation (Section 6.6), Figure 9 | `model_inflation.txt`, `model_inflation.csv`, `fig_model_inflation.png` |
+| Channel test (Section 5.3) | `sa_D_channel.txt` |
+| Tables 5 and 7, Figures 7 and 9 | `model_*.csv`, `boot_summary.csv`, `fig_model_fit.png`, `fig_model_counterfactual.png` |
+| Table 6, investor purchase volumes (Section 6.3) | `table_purchase_volumes.tex`, `purchase_sensitivity.csv`, `purchase_paths.csv`, `purchase_volumes.txt` |
+| Investor loan numbers against the non-price part of commitments (Section 6.3) | `purchase_volumes.txt` |
+| Identification (Section 6.4), Figure 8 | `model_ident.txt`, `model_profile.csv`, `model_profile_omega.csv`, `model_sensitivity.csv`, `fig_model_profile.png` |
+| Small-sample behaviour (Section 6.4) | `model_small_sample.txt`, `model_small_sample.csv` |
+| Credit conditions and measured inflation (Section 6.7), Figure 10 | `model_inflation.txt`, `model_inflation.csv`, `fig_model_inflation.png` |
 | Table C.1 | `est_price_divergence*.txt`, `est_rent_divergence*.txt`; stacked test in `sa2_S1_stacked.txt` |
 | Tables C.2–C.3 | `sa2_S2_breaks.txt`, `sa2_S3_granger.txt` |
 | Table D.1, Figures D.1–D.2 | `lpiv_apra.csv`, `fig_lpiv_main.png`, `cr_valid_ranges.csv`, `fig_cr_valid_range.png`, `cr_mcub_endpoints.csv` |
 | Online Appendix E | `sa2_S4`–`sa2_S7`, `sa_F_oo.txt`, `sa_H_presplice.txt`, `robust_*.txt`, `alt_price_spline.txt`, `mech_*.txt`, `nlin_*.txt` |
 | Figure E.2 | `rolling_financial_r2.csv`, `fig_divergence.png` |
 | Table E.1, and the autocorrelations in Section 4.3 | `sa2_S9_unitroot.txt` |
-| Online Appendix F: Tables F.1–F.2, Figure F.1 | `new_lease_tests.txt`, `new_lease_lp.csv`, `new_lease_boot.csv`, `fig_new_lease_lp.png`; the index itself in `clean_rev/new_lease_rents.csv` |
+| Figure 6 (Section 5.4), Online Appendix F: Tables F.1–F.2 | `new_lease_tests.txt`, `new_lease_lp.csv`, `new_lease_boot.csv`, `fig_new_lease_lp.png`; the index itself in `clean_rev/new_lease_rents.csv` |
 
-The files for Figures 5–8, D.1–D.2 and E.1–E.2 are the versions that
+The files for Figures 5, 7–9, D.1–D.2 and E.1–E.2 are the versions that
 `06_paper_figures.R` draws last.
 
 ## Requirements
@@ -114,14 +120,14 @@ The files for Figures 5–8, D.1–D.2 and E.1–E.2 are the versions that
 R (≥ 4.1) with `dplyr`, `tidyr`, `readr`, `readxl`, `zoo`, `purrr`, `plm`,
 `lmtest`, `sandwich`, `car`, `splines`, `ggplot2` and `parallel` (base R). The
 final run used R 4.5.2 on Windows 11. A full run with R 4.5.3 on Linux,
-bootstrap included, reproduces Tables 1–6, C.1–C.3, D.1, E.1 and F.1–F.2 and the
-bootstrap results in Sections 6.3–6.6, with two small exceptions.
-The data pin down κ and η only weakly (the ridge in Figure 7), so a few
+bootstrap included, reproduces Tables 1–7, C.1–C.3, D.1, E.1 and F.1–F.2 and the
+bootstrap results in Sections 6.4–6.7, with two small exceptions.
+The data pin down κ and η only weakly (the ridge in Figure 8), so a few
 bootstrap and Monte Carlo estimates stop at different points on the ridge on
 different platforms. On Linux, the correlation of κ and η across the 399
-draws is −0.53 (−0.52 in Section 6.3), and the Monte Carlo median of κ is
+draws is −0.53 (−0.52 in Section 6.4), and the Monte Carlo median of κ is
 0.20, with 90 percent of the estimates between 0.02 and 0.68 (0.21, and 0.03
-to 0.66, in Section 6.3).
+to 0.66, in Section 6.4).
 
 Optional:
 - `ivcrtest` for `03g_cr_endpoints.R`:
@@ -137,7 +143,7 @@ Optional:
 - `jsonlite` and `curl` for `fetch_rent_reports.R`.
 - `targets` for the dependency-tracked pipeline.
 
-Figure 7's panel titles use Greek letters, which need R in a UTF-8 locale
+Figure 8's panel titles use Greek letters, which need R in a UTF-8 locale
 (Windows R 4.2 or later, and most macOS and Linux set-ups).
 
 ## Layout
@@ -148,6 +154,7 @@ Figure 7's panel titles use Greek letters, which need R in a UTF-8 locale
 run_all.R   / _targets.R       two entry points (see Quick start)
 verify_raw.R                   pre-run check that raw/ holds the expected inputs
 R/functions.R                  stage wrappers for the targets pipeline
+R/fast_solver.R                faster model solver for 04d, checked against 04's
 fetch_rent_reports.R           downloads the SA bond workbooks and NSW report PDFs into raw_rev/
 plot_migration_composition.R   standalone diagnostic (not in the master run)
 check_integration_plots.R      standalone diagnostic (not in the master run)

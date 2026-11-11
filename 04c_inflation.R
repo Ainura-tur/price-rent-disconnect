@@ -14,7 +14,7 @@
 # Reads:  output/model_estimates.csv, output/model_counterfactual.csv, the model
 #         (04_model_matching.R definitions), output/boot_b8_*.rds (05_bootstrap.R)
 # Writes: output/model_inflation.txt, output/model_inflation.csv,
-#         output/fig_model_inflation.png (Figure 9)
+#         output/fig_model_inflation.png (Figure 10)
 # Run after 05_bootstrap.R, despite its number: N3 and the bands need its draws.
 # =============================================================================
 
