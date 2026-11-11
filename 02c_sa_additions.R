@@ -2,7 +2,7 @@
 # 02c_sa_additions.R  --  revision analyses on the seasonally adjusted credit
 #                         measure used in the main text
 #
-#   A  Price equation with price momentum (Table 6, columns 3-4)
+#   A  Price equation, with price momentum in columns 2 and 4 (Table 4)
 #   B  Dynamic (Calvo) rent equation: omega and long-run coefficients
 #   C  Local projections with labour-market controls; post-impact projections
 #   D  Tenure-channel test: lagged credit given lagged price growth
